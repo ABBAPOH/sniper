@@ -1,15 +1,8 @@
-#include <QCoreApplication>
-#include <QDebug>
-
-#include "class.h"
+#include "application.h"
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
+    Application app(argc, argv);
 
-    qDebug() << "123";
-
-    auto c = std::make_unique<Class>();
-
-    return a.exec();
+    return app.exec();
 }

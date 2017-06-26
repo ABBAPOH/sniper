@@ -1,16 +1,16 @@
-#include "class.h"
+#include "application.h"
 
 #include <QNetworkReply>
 #include <QUrlQuery>
 
-Class::Class() :
-//    _nam(std::make_unique<QNetworkAccessManager>())
-  _nam(new QNetworkAccessManager())
+Application::Application(int& argc, char** argv) :
+    QApplication(argc, argv),
+    _nam(new QNetworkAccessManager())
 {
     login();
 }
 
-void Class::login()
+void Application::login()
 {
     QUrlQuery postData;
     postData.addQueryItem("referer", "http://topdeck.ru/forum/index.php?");
@@ -25,10 +25,10 @@ void Class::login()
         "application/x-www-form-urlencoded");
 
     auto reply = _nam->post(request, postData.toString(QUrl::FullyEncoded).toUtf8());
-    connect(reply, &QNetworkReply::finished, this, &Class::loginFinished);
+    connect(reply, &QNetworkReply::finished, this, &Application::loginFinished);
 }
 
-void Class::loginFinished()
+void Application::loginFinished()
 {
     auto reply = qobject_cast<QNetworkReply *>(sender());
     Q_ASSERT(reply);
@@ -37,10 +37,10 @@ void Class::loginFinished()
     qDebug() << reply->errorString();
     qDebug() << QString::fromUtf8(reply->readAll());
 
-    makeBid();
+//    makeBid();
 }
 
-void Class::makeBid()
+void Application::makeBid()
 {
     QUrlQuery postData;
     postData.addQueryItem("auc_id", "44030");
@@ -51,10 +51,10 @@ void Class::makeBid()
         "application/x-www-form-urlencoded");
 
     auto reply = _nam->post(request, postData.toString(QUrl::FullyEncoded).toUtf8());
-    connect(reply, &QNetworkReply::finished, this, &Class::onFinished);
+    connect(reply, &QNetworkReply::finished, this, &Application::onFinished);
 }
 
-void Class::onFinished()
+void Application::onFinished()
 {
     auto reply = qobject_cast<QNetworkReply *>(sender());
     Q_ASSERT(reply);

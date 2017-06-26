@@ -3,6 +3,7 @@ import qbs.FileInfo
 
 MyApp {
     Depends { name: "Qt.core" }
+    Depends { name: "Qt.network" }
     Depends { name: "Qt.widgets" }
 
     name: "Sniper"

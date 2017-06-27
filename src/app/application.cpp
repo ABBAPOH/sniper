@@ -3,6 +3,8 @@
 #include <QNetworkReply>
 #include <QUrlQuery>
 
+static Application *_instance = nullptr;
+
 Application::Application(int& argc, char** argv) :
     QApplication(argc, argv),
     _nam(new QNetworkAccessManager()),
@@ -11,6 +13,21 @@ Application::Application(int& argc, char** argv) :
     login();
 
     _model->setNetworkAccessManager(_nam);
+
+    _instance = this;
+}
+
+Application::~Application()
+{
+    _instance = nullptr;
+}
+
+Application *Application::instance()
+{
+    if (!_instance)
+        qFatal("Must construct Application object before calling instance() method");
+
+    return _instance;
 }
 
 void Application::login()

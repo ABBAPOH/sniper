@@ -12,8 +12,11 @@ class Application: public QApplication
     Q_OBJECT
 public:
     explicit Application(int &argc, char **argv);
+    ~Application();
 
     AuctionsModel *model() const { return _model.get(); }
+
+    static Application *instance();
 
 private slots:
     void login();

@@ -16,3 +16,8 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
+
+void MainWindow::setModel(QAbstractItemModel* model)
+{
+    ui->auctionsView->setModel(model);
+}

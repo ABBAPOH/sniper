@@ -5,9 +5,12 @@
 
 Application::Application(int& argc, char** argv) :
     QApplication(argc, argv),
-    _nam(new QNetworkAccessManager())
+    _nam(new QNetworkAccessManager()),
+    _model(new AuctionsModel())
 {
     login();
+
+    _model->setNetworkAccessManager(_nam);
 }
 
 void Application::login()
@@ -38,6 +41,7 @@ void Application::loginFinished()
     qDebug() << QString::fromUtf8(reply->readAll());
 
 //    makeBid();
+    _model->update();
 }
 
 void Application::makeBid()

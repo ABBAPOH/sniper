@@ -1,6 +1,6 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
+#include <QAbstractItemModel>
 #include <QMainWindow>
 
 namespace Ui {
@@ -15,8 +15,8 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    void setModel(QAbstractItemModel *model);
+
 private:
     Ui::MainWindow *ui;
 };
-
-#endif // MAINWINDOW_H

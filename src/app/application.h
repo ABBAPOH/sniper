@@ -1,5 +1,7 @@
 #pragma once
 
+#include "auctionsmodel.h"
+
 #include <QtWidgets/QApplication>
 #include <QNetworkAccessManager>
 
@@ -11,6 +13,8 @@ class Application: public QApplication
 public:
     explicit Application(int &argc, char **argv);
 
+    AuctionsModel *model() const { return _model.get(); }
+
 private slots:
     void login();
     void loginFinished();
@@ -18,6 +22,7 @@ private slots:
     void onFinished();
 
 private:
-    std::unique_ptr<QNetworkAccessManager> _nam;
+    std::shared_ptr<QNetworkAccessManager> _nam;
+    std::unique_ptr<AuctionsModel> _model;
 
 };

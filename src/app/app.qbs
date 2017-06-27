@@ -5,6 +5,7 @@ MyApp {
     Depends { name: "Qt.core" }
     Depends { name: "Qt.network" }
     Depends { name: "Qt.widgets" }
+    Depends { name: "Qt.webkitwidgets" }
 
     name: "Sniper"
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "bidsmodel.h"
+
 #include <QAbstractItemModel>
 #include <QMainWindow>
 
@@ -15,7 +17,11 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void setModel(QAbstractItemModel *model);
+    void setAuctionsModel(QAbstractItemModel *model);
+    void setBidsModel(QAbstractItemModel *model);
+
+private slots:
+    void onDoubleClicked(const QModelIndex &idx);
 
 private:
     Ui::MainWindow *ui;

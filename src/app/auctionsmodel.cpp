@@ -29,6 +29,14 @@ void AuctionsModel::setNetworkAccessManager(const std::shared_ptr<QNetworkAccess
     emit networkAccessManagerChanged();
 }
 
+AuctionsModel::Data AuctionsModel::auctionData(const QModelIndex &index) const
+{
+    if (!index.isValid())
+        return Data();
+
+    return _data.at(index.row());
+}
+
 int AuctionsModel::rowCount(const QModelIndex& parent) const
 {
     if (parent.isValid())
@@ -82,15 +90,21 @@ void AuctionsModel::loadFinished()
     auto body = table.findFirst("tbody");
     for (auto tr = body.firstChild().nextSibling(); tr != body.lastChild(); tr = tr.nextSibling()) {
         QStringList rawData;
+        QUrl url;
         for (auto td = tr.firstChild(); td != tr.lastChild(); td = td.nextSibling()) {
+            if (rawData.empty()) {
+                auto a = td.findFirst("a");
+                url = a.attribute("href");
+            }
             rawData.append(td.toPlainText());
         }
         Data d;
+        d.url = url;
         d.lot = rawData[0];
         d.seller = rawData[1];
         d.shipping = rawData[2];
         d.duration = rawData[3];
-        d.bid = rawData[4];
+        d.bid = rawData[4].toInt();
         _data.push_back(d);
     }
     endResetModel();

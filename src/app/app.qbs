@@ -31,7 +31,11 @@ MyApp {
     Group {
         name: "sniper.png"
         condition: qbs.targetOS.contains("linux")
-        files: [ "sniper.png" ]
+        files: [
+            "bidsmodel.cpp",
+            "bidsmodel.h",
+            "sniper.png",
+        ]
         qbs.install: true
         qbs.installDir: "share/pixmaps"
     }

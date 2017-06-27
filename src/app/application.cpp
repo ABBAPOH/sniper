@@ -8,11 +8,13 @@ static Application *_instance = nullptr;
 Application::Application(int& argc, char** argv) :
     QApplication(argc, argv),
     _nam(new QNetworkAccessManager()),
-    _model(new AuctionsModel())
+    _auctionsModel(new AuctionsModel()),
+    _bidsModel(new BidsModel())
 {
     login();
 
-    _model->setNetworkAccessManager(_nam);
+    _auctionsModel->setNetworkAccessManager(_nam);
+    _bidsModel->setNetworkAccessManager(_nam);
 
     _instance = this;
 }
@@ -57,15 +59,15 @@ void Application::loginFinished()
     qDebug() << reply->errorString();
     qDebug() << QString::fromUtf8(reply->readAll());
 
-//    makeBid();
-    _model->update();
+//    makeBid(44030, 2750);
+    _auctionsModel->update();
 }
 
-void Application::makeBid()
+void Application::makeBid(int auctionId, int bid)
 {
     QUrlQuery postData;
-    postData.addQueryItem("auc_id", "44030");
-    postData.addQueryItem("bid", "2750");
+    postData.addQueryItem("auc_id", QString::number(auctionId));
+    postData.addQueryItem("bid", QString::number(bid));
 
     QNetworkRequest request(QUrl("http://topdeck.ru/auc/makebid.php"));
     request.setHeader(QNetworkRequest::ContentTypeHeader,

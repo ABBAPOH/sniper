@@ -8,7 +8,8 @@ int main(int argc, char *argv[])
 
     MainWindow w;
 
-    w.setModel(app.model());
+    w.setAuctionsModel(app.auctionsModel());
+    w.setBidsModel(app.bidsModel());
     w.show();
 
     return app.exec();

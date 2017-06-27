@@ -1,6 +1,7 @@
 #pragma once
 
 #include "auctionsmodel.h"
+#include "bidsmodel.h"
 
 #include <QtWidgets/QApplication>
 #include <QNetworkAccessManager>
@@ -14,18 +15,21 @@ public:
     explicit Application(int &argc, char **argv);
     ~Application();
 
-    AuctionsModel *model() const { return _model.get(); }
+    AuctionsModel *auctionsModel() const { return _auctionsModel.get(); }
+    BidsModel *bidsModel() const { return _bidsModel.get(); }
 
     static Application *instance();
 
 private slots:
     void login();
     void loginFinished();
-    void makeBid();
+    void makeBid(int auctionId, int bid);
     void onFinished();
 
 private:
     std::shared_ptr<QNetworkAccessManager> _nam;
-    std::unique_ptr<AuctionsModel> _model;
+    std::unique_ptr<AuctionsModel> _auctionsModel;
+    std::unique_ptr<BidsModel> _bidsModel;
+
 
 };

@@ -21,10 +21,22 @@ public:
         ColumnCount
     };
 
+    struct Data
+    {
+        QUrl url;
+        QString lot;
+        QString seller;
+        QString shipping;
+        QString duration;
+        int bid;
+    };
+
     explicit AuctionsModel(QObject *parent = nullptr);
 
     std::shared_ptr<QNetworkAccessManager> networkAccessManager() const;
     void setNetworkAccessManager(const std::shared_ptr<QNetworkAccessManager> &manager);
+
+    Data auctionData(const QModelIndex &index) const;
 
     // QAbstractItemModel interface
 public:
@@ -42,17 +54,8 @@ private slots:
     void loadFinished();
 
 private:
-    struct Data
-    {
-        QString lot;
-        QString seller;
-        QString shipping;
-        QString duration;
-        QString bid;
-    };
-
     std::deque<Data> _data;
-    mutable std::shared_ptr<QNetworkAccessManager> _manager;
+    std::shared_ptr<QNetworkAccessManager> _manager;
     std::unique_ptr<QWebPage> _page;
 };
 

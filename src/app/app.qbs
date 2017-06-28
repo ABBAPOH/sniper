@@ -32,8 +32,6 @@ MyApp {
         name: "sniper.png"
         condition: qbs.targetOS.contains("linux")
         files: [
-            "bidsmodel.cpp",
-            "bidsmodel.h",
             "sniper.png",
         ]
         qbs.install: true

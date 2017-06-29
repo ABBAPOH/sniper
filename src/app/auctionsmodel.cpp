@@ -57,9 +57,9 @@ QString getAucDuration(const QDateTime &current, const QDateTime &end)
 {
     const auto msecs = current.msecsTo(end);
     const auto days = msecs / 1000 / 60 / 60 / 24;
-    const auto hours = (msecs / 1000 / 60 / 60) - days * 24;
-    const auto minutes = (msecs / 1000 / 60) - (days * 24 + hours) * 60;
-    const auto secs = (msecs / 1000) - ((days * 24 + hours) * 60 + minutes) * 60;
+    const auto hours = int((msecs / 1000 / 60 / 60) - days * 24);
+    const auto minutes = int((msecs / 1000 / 60) - (days * 24 + hours) * 60);
+    const auto secs = int((msecs / 1000) - ((days * 24 + hours) * 60 + minutes) * 60);
     return AuctionsModel::tr("%1:%2").arg(days).arg(QTime(hours, minutes, secs).toString("hh:mm:ss"));
 }
 

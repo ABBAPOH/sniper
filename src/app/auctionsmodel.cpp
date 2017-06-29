@@ -7,6 +7,8 @@
 #include <QtWebKit/QWebElement>
 #include <QtWebKitWidgets/QWebFrame>
 
+#include <QRegularExpression>
+
 AuctionsModel::AuctionsModel(QObject* parent) :
     QAbstractTableModel(parent),
     _page(new QWebPage)
@@ -51,11 +53,22 @@ int AuctionsModel::columnCount(const QModelIndex& parent) const
     return Columns::ColumnCount;
 }
 
+QString getAucDuration(const QDateTime &current, const QDateTime &end)
+{
+    const auto msecs = current.msecsTo(end);
+    const auto days = msecs / 1000 / 60 / 60 / 24;
+    const auto hours = (msecs / 1000 / 60 / 60) - days * 24;
+    const auto minutes = (msecs / 1000 / 60) - (days * 24 + hours) * 60;
+    const auto secs = (msecs / 1000) - ((days * 24 + hours) * 60 + minutes) * 60;
+    return AuctionsModel::tr("%1:%2").arg(days).arg(QTime(hours, minutes, secs).toString("hh:mm:ss"));
+}
+
 QVariant AuctionsModel::data(const QModelIndex& index, int role) const
 {
     if (!index.isValid())
         return QVariant();
 
+    const auto currentDateTime = QDateTime::currentDateTimeUtc();
     const int column = index.column();
     const auto &data = _data.at(size_t(index.row()));
     if (role == Qt::DisplayRole) {
@@ -66,7 +79,7 @@ QVariant AuctionsModel::data(const QModelIndex& index, int role) const
         } else if (column == Shipping) {
             return data.shipping;
         } else if (column == Duration) {
-            return data.duration;
+            return getAucDuration(currentDateTime, data.end);
         } else if (column == Bid) {
             return data.bid;
         }
@@ -85,6 +98,8 @@ void AuctionsModel::update()
 
 void AuctionsModel::loadFinished()
 {
+    QRegularExpression expr("((\\d+) д. ?)?((\\d+) ч. ?)?((\\d+) мин. ?)?((\\d+) с.)?$");
+
     beginResetModel();
     auto table = _page->mainFrame()->findFirstElement("table[class=reftable]");
     auto body = table.findFirst("tbody");
@@ -104,6 +119,20 @@ void AuctionsModel::loadFinished()
         d.seller = rawData[1];
         d.shipping = rawData[2];
         d.duration = rawData[3];
+        if (d.duration == "Завершен")
+            continue;
+        auto match = expr.match(d.duration);
+        if (match.isValid()) {
+            const auto days = match.captured(2);
+            const auto hours = match.captured(4);
+            const auto mins = match.captured(6);
+            const auto secs = match.captured(8);
+            QTime time(hours.toInt(), mins.toInt(), secs.toInt());
+            QDateTime dateTime = QDateTime::currentDateTimeUtc();
+            dateTime = dateTime.addDays(days.toInt());
+            dateTime = dateTime.addMSecs(time.msecsSinceStartOfDay());
+            d.end = dateTime;
+        }
         d.bid = rawData[4].toInt();
         _data.push_back(d);
     }

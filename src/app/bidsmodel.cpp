@@ -5,6 +5,7 @@
 #include <QtWebKitWidgets/QWebFrame>
 
 #include <QtCore/QDebug>
+#include <QtCore/QTimer>
 #include <QtCore/QUrlQuery>
 
 BidsModel::BidsModel() :
@@ -102,23 +103,53 @@ void BidsModel::loadFinished(bool ok)
     qDebug() << _page->mainFrame()->url();
     for (auto frame : _page->mainFrame()->childFrames()) {
         const auto url = frame->baseUrl();
-        qDebug() << url << url.path() << url.query();
         if (url.path() == "/auc/auc.php") {
-
             data.aucId = QUrlQuery(url).queryItemValue("id").toInt();
+
+            auto body = frame->findFirstElement("body");
+
+            const char *constLines[] = {
+                "Текущая ставка, рубли: ",
+                "Шаг: ",
+                "До окончания аукциона: "
+            };
+
+            auto lines = body.toPlainText().split("\n", QString::SkipEmptyParts);
+            for (const auto &line : lines) {
+                if (line.startsWith(constLines[0])) {
+                    data.bid = line.mid(QString(constLines[0]).length()).toInt();
+                } else if (line.startsWith(constLines[1])) {
+                    data.step = line.mid(QString(constLines[1]).length()).toInt();
+                } else if (line.startsWith(constLines[2])) {
+                    data.duration = line.mid(QString(constLines[2]).length());
+                }
+            }
+
             break;
         }
-        qDebug() << frame->documentElement().attributeNames();
-        qDebug() << frame->url();
-        qDebug() << frame->toHtml();
     }
 
-    auto frame = _page->mainFrame()->findFirstElement("iframe");
-    qDebug() << frame.toPlainText();
+    data.timer = std::make_shared<QTimer>();
+    data.timer->setSingleShot(true);
+    data.timer->setProperty("id", rowCount());
+    connect(data.timer.get(), &QTimer::timeout, this, &BidsModel::onTimeout);
 
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
     _data.push_back(data);
     endInsertRows();
 
     processNextAddedBid();
+}
+
+void BidsModel::onTimeout()
+{
+    auto timer = qobject_cast<QTimer *>(sender());
+    if (!timer) {
+        qWarning() << "No timer object";
+        return;
+    }
+
+    auto id = timer->property("id").toInt();
+    const auto &data = _data.at(id);
+
 }

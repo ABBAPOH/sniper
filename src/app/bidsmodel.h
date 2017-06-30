@@ -41,12 +41,15 @@ private:
 
 private slots:
     void loadFinished(bool ok);
+    void onTimeout();
 
 private:
     struct Data : public AuctionsModel::Data
     {
         int aucId {0};
         int myBid {0};
+        int step {0};
+        std::shared_ptr<QTimer> timer;
     };
 
     enum class Status { Idle, Adding };

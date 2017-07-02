@@ -10,9 +10,14 @@
 
 AuctionsModel::AuctionsModel(QObject* parent) :
     QAbstractTableModel(parent),
-    _page(new QWebPage)
+    _page(new QWebPage),
+    _updateTimer(new QTimer)
 {
+    _updateTimer->setSingleShot(true);
+    connect(_updateTimer.get(), &QTimer::timeout, this, &AuctionsModel::onUdpateTimeout);
     connect(_page.get(), &QWebPage::loadFinished, this, &AuctionsModel::loadFinished);
+
+    restartUpdateTimer();
 }
 
 std::shared_ptr<QNetworkAccessManager> AuctionsModel::networkAccessManager() const
@@ -28,6 +33,56 @@ void AuctionsModel::setNetworkAccessManager(const std::shared_ptr<QNetworkAccess
     _manager = manager;
     _page->setNetworkAccessManager(_manager.get());
     emit networkAccessManagerChanged();
+    qCDebug(auctionsModel) << "Network manager changed";
+}
+
+bool AuctionsModel::autoUpdateEnabled() const
+{
+    return _autoUpdateEnabled;
+}
+
+void AuctionsModel::setAutoUpdateEnabled(bool enabled)
+{
+    if (_autoUpdateEnabled == enabled)
+        return;
+
+    _autoUpdateEnabled = enabled;
+    qCDebug(auctionsModel) << "Auto update enabled changed to" << enabled;
+
+    restartUpdateTimer();
+    emit autoUpdateEnabledChanged(_autoUpdateEnabled);
+}
+
+int AuctionsModel::autoUpdateInterval() const
+{
+    return _autoUpdateInterval;
+}
+
+void AuctionsModel::setAutoUpdateInterval(int interval)
+{
+    if (_autoUpdateInterval == interval)
+        return;
+
+    _autoUpdateInterval = interval;
+    qCDebug(auctionsModel) << "Auto update interval changed to" << _autoUpdateInterval;
+    restartUpdateTimer();
+    emit autoUpdateIntervalChanged(_autoUpdateInterval);
+}
+
+int AuctionsModel::autoUpdateDispersion() const
+{
+    return _autoUpdateDispersion;
+}
+
+void AuctionsModel::setAutoUpdateDispersion(int dispersion)
+{
+    if (_autoUpdateDispersion == dispersion)
+        return;
+
+    _autoUpdateDispersion = dispersion;
+    qCDebug(auctionsModel) << "Auto update dispersion changed to" << _autoUpdateDispersion;
+    restartUpdateTimer();
+    emit autoUpdateDispersionChanged(_autoUpdateDispersion);
 }
 
 AuctionsModel::Data AuctionsModel::auctionData(const QModelIndex &index) const
@@ -88,13 +143,12 @@ void AuctionsModel::update()
     if (!_manager)
         return;
 
+    qCInfo(auctionsModel) << "Requested update";
     _page->mainFrame()->setUrl(QUrl("http://topdeck.ru/auc/aucs.php"));
 }
 
 void AuctionsModel::loadFinished()
 {
-
-
     beginResetModel();
     auto table = _page->mainFrame()->findFirstElement("table[class=reftable]");
     auto body = table.findFirst("tbody");
@@ -127,4 +181,23 @@ void AuctionsModel::loadFinished()
         _data.push_back(d);
     }
     endResetModel();
+    qCInfo(auctionsModel) << "Updated";
 }
+
+void AuctionsModel::onUdpateTimeout()
+{
+    update();
+    restartUpdateTimer();
+}
+
+void AuctionsModel::restartUpdateTimer()
+{
+    _updateTimer->stop();
+    if (_autoUpdateEnabled) {
+        const auto delay = _autoUpdateInterval + qrand() % _autoUpdateDispersion;
+        qCInfo(auctionsModel) << "Next update in" << QDateTime::currentDateTimeUtc().addMSecs(delay);
+        _updateTimer->start(delay);
+    }
+}
+
+Q_LOGGING_CATEGORY(auctionsModel, "sniper.auctionsModel");

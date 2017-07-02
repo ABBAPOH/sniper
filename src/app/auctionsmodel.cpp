@@ -107,6 +107,24 @@ int AuctionsModel::columnCount(const QModelIndex& parent) const
     return Columns::ColumnCount;
 }
 
+QVariant AuctionsModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (orientation == Qt::Horizontal) {
+        if (role == Qt::DisplayRole) {
+            switch (section) {
+            case Columns::Lot: return tr("Lot");
+            case Columns::Seller: return tr("Seller");
+            case Columns::Shipping: return tr("Shipping");
+            case Columns::Duration: return tr("Duration");
+            case Columns::Bid: return tr("Bid");
+            default:
+                break;
+            }
+        }
+    }
+    return QVariant();
+}
+
 QString getAucDuration(const QDateTime &current, const QDateTime &end)
 {
     const auto msecs = current.msecsTo(end);

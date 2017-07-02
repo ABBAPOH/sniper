@@ -149,7 +149,7 @@ void BidsModel::processDuration(BidsModel::Data &data)
         delay = int(data.duration - 5 * msecsInSecond - qrand() % (7 * msecsInSecond)); // reload in 5-7 seconds before end
     else { // less than a 15 seconds
         makeBid(data);
-        delay = 30;
+        delay = 30 * msecsInSecond;
     }
 
     data.timer->start(delay);

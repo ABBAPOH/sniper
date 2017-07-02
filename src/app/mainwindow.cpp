@@ -23,7 +23,17 @@ MainWindow::~MainWindow()
 
 void MainWindow::setAuctionsModel(QAbstractItemModel* model)
 {
+    if (ui->auctionsView->model()) {
+        disconnect(ui->actionUpdateAuctions, &QAction::triggered,
+                   qobject_cast<AuctionsModel*>(ui->auctionsView->model()), &AuctionsModel::update);
+    }
+
     ui->auctionsView->setModel(model);
+
+    if (model) {
+        connect(ui->actionUpdateAuctions, &QAction::triggered,
+                qobject_cast<AuctionsModel*>(ui->auctionsView->model()), &AuctionsModel::update);
+    }
 }
 
 void MainWindow::setBidsModel(QAbstractItemModel *model)

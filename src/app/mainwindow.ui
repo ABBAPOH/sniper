@@ -61,6 +61,7 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionUpdateAuctions"/>
     <addaction name="actionQuit"/>
    </widget>
    <addaction name="menuFile"/>
@@ -72,6 +73,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionUpdateAuctions">
+   <property name="text">
+    <string>Update auctions</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
    </property>
   </action>
  </widget>

@@ -58,6 +58,12 @@ void AucInfoLoader::processNextUrl()
 
 void AucInfoLoader::loadFinished(bool ok)
 {
+    if (!_page)
+        return;
+
+    if (_page->mainFrame()->url() == QUrl("about:blank"))
+        return;
+
     auto url = _queue.front();
     _status = Status::Idle;
     _queue.pop_front();
@@ -100,6 +106,8 @@ void AucInfoLoader::loadFinished(bool ok)
             break;
         }
     }
+
+    _page->mainFrame()->setUrl(QUrl("about:blank"));
 
     emit loaded(info);
 

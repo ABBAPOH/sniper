@@ -20,6 +20,7 @@ public:
         CurrentBid,
         MyBid,
         AucId,
+        NextUpdate,
         ColumnCount
     };
 
@@ -37,23 +38,25 @@ public:
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
 
 private:
-    void processNextAddedBid();
-
-private slots:
-    void loadFinished(bool ok);
-    void onTimeout();
-
-private:
     struct Data : public AuctionsModel::Data
     {
         int aucId {0};
         int myBid {0};
         int step {0};
+        QDateTime nextUpdate;
         std::shared_ptr<QTimer> timer;
     };
 
     enum class Status { Idle, Adding };
+    void processNextAddedBid();
 
+private slots:
+    void loadFinished(bool ok);
+    void onTimeout();
+    void processTimeout(Data &data);
+    void makeBid(const Data &data);
+
+private:
     std::shared_ptr<QNetworkAccessManager> _manager;
     std::deque<Data> _data;
     Status _status = Status::Idle;

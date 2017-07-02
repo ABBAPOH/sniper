@@ -76,6 +76,8 @@ QVariant BidsModel::data(const QModelIndex &index, int role) const
             return data.myBid;
         } else if (column == AucId) {
             return data.aucId;
+        } else if (column == NextUpdate) {
+            return data.nextUpdate.toLocalTime();
         }
     }
 
@@ -134,6 +136,7 @@ void BidsModel::loadFinished(bool ok)
     data.timer->setSingleShot(true);
     data.timer->setProperty("id", rowCount());
     connect(data.timer.get(), &QTimer::timeout, this, &BidsModel::onTimeout);
+    processTimeout(data);
 
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
     _data.push_back(data);
@@ -151,6 +154,47 @@ void BidsModel::onTimeout()
     }
 
     auto id = timer->property("id").toInt();
-    const auto &data = _data.at(id);
+    processTimeout(_data.at(size_t(id)));
+}
 
+void BidsModel::processTimeout(BidsModel::Data &data)
+{
+    int delay = 0;
+    int msecsInHour = 60 * 60 * 1000;
+    int msecsInMinute = 60 * 1000;
+    int msecsInSecond = 1000;
+    if (data.duration > 12 * msecsInHour)
+        delay = 10 * msecsInHour + qrand() % msecsInHour; // reload in next 10-11 hours
+    else if (data.duration > 6 * msecsInHour)
+        delay = 5 * msecsInHour + qrand() % (msecsInHour / 2); // reload in next 5-5.5 hours
+    else if (data.duration > 2 * msecsInHour)
+        delay = 1 * msecsInHour + qrand() % (msecsInHour / 2); // reload in next 1-1.5 hours
+    else if (data.duration > 1 * msecsInHour)
+        delay = 30 * msecsInMinute + qrand() % (15 * msecsInMinute); // reload in next 30-45 minutes
+    else if (data.duration > 30 * msecsInMinute)
+        delay = 15 * msecsInMinute + qrand() % (10 * msecsInMinute); // reload in next 15-25 minutes
+    else if (data.duration > 15 * msecsInMinute)
+        delay = 10 * msecsInMinute + qrand() % (3 * msecsInMinute); // reload in next 10-13 minutes
+    else if (data.duration > 10 * msecsInMinute)
+        delay = 5 * msecsInMinute + qrand() % (3 * msecsInMinute); // reload in next 5-8 minutes
+    else if (data.duration > 5 * msecsInMinute)
+        delay = 2 * msecsInMinute + qrand() % (1 * msecsInMinute); // reload in next 2-3 minutes
+    else if (data.duration > 2 * msecsInMinute)
+        delay = 60 * msecsInSecond + qrand() % (30 * msecsInSecond); // reload in next 60-90 seconds
+    else if (data.duration > 1 * msecsInMinute)
+        delay = int(data.duration - 15 * msecsInSecond - qrand() % (15 * msecsInSecond)); // reload in 15-30 seconds before end
+    else if (data.duration > 15 * msecsInSecond)
+        delay = int(data.duration - 5 * msecsInSecond - qrand() % (7 * msecsInSecond)); // reload in 5-7 seconds before end
+    else { // less than a 15 seconds
+        makeBid(data);
+        delay = 30;
+    }
+
+    data.timer->start(delay);
+    data.nextUpdate = QDateTime::currentDateTimeUtc().addMSecs(delay);
+}
+
+void BidsModel::makeBid(const BidsModel::Data &data)
+{
+    qDebug() << "Making bid for " << data.lot << data.myBid;
 }

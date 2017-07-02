@@ -15,6 +15,7 @@ AucInfoLoader::AucInfoLoader(QObject *parent) :
 
 AucInfoLoader::~AucInfoLoader()
 {
+    _page.reset(); // to prevent crash when page emits finished() signal on deleting
 }
 
 std::shared_ptr<QNetworkAccessManager> AucInfoLoader::networkAccessManager() const
@@ -52,7 +53,7 @@ void AucInfoLoader::processNextUrl()
     qCDebug(aucInfoLoader) << "Processing next url" << url;
 
     _status = Status::Adding;
-    _page->mainFrame()->setUrl(url);
+    _page->mainFrame()->load(url);
 }
 
 void AucInfoLoader::loadFinished(bool ok)

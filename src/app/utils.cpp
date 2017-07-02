@@ -1,6 +1,7 @@
 #include "utils.h"
 
 #include <QRegularExpression>
+#include <QTime>
 
 namespace Utils {
 
@@ -17,6 +18,19 @@ qint64 parseDuration(const QString& duration)
 
         return (((days * 24 + hours) * 60 + mins) * 60 + secs) * 1000;
     }
+    return -1;
+}
+
+QString durationToString(qint64 msecs)
+{
+    if (msecs < 0)
+        return QString();
+
+    const auto days = msecs / 1000 / 60 / 60 / 24;
+    const auto hours = int((msecs / 1000 / 60 / 60) - days * 24);
+    const auto minutes = int((msecs / 1000 / 60) - (days * 24 + hours) * 60);
+    const auto secs = int((msecs / 1000) - ((days * 24 + hours) * 60 + minutes) * 60);
+    return QStringLiteral("%1:%2").arg(days).arg(QTime(hours, minutes, secs).toString("hh:mm:ss"));
 }
 
 } // namespace Utils

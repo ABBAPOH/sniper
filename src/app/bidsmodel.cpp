@@ -1,4 +1,5 @@
 #include "bidsmodel.h"
+#include "utils.h"
 
 #include <QtCore/QDebug>
 #include <QtCore/QTimer>
@@ -60,7 +61,7 @@ QVariant BidsModel::data(const QModelIndex &index, int role) const
         } else if (column == Shipping) {
             return data.shipping;
         } else if (column == Duration) {
-            return data.duration;
+            return Utils::durationToString(data.duration);
         } else if (column == CurrentBid) {
             return data.bid;
         } else if (column == MyBid) {

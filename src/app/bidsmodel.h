@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aucinfoloader.h"
 #include "auctionsmodel.h"
 
 #include <QtCore/QAbstractTableModel>
@@ -26,8 +27,8 @@ public:
 
     BidsModel();
 
-    std::shared_ptr<QNetworkAccessManager> networkAccessManager() const;
-    void setNetworkAccessManager(const std::shared_ptr<QNetworkAccessManager> &manager);
+    AucInfoLoader &infoLoader() { return *_loader.get(); }
+    const AucInfoLoader &infoLoader() const { return *_loader.get(); }
 
     void addBid(const AuctionsModel::Data &data, int bid);
 
@@ -47,20 +48,14 @@ private:
         std::shared_ptr<QTimer> timer;
     };
 
-    enum class Status { Idle, Adding };
-    void processNextAddedBid();
-
 private slots:
-    void loadFinished(bool ok);
+    void onInfoLoaded(const AucInfoLoader::Info &info);
     void onTimeout();
-    void processTimeout(Data &data);
+    void processDuration(Data &data);
     void makeBid(const Data &data);
 
 private:
-    std::shared_ptr<QNetworkAccessManager> _manager;
-    std::deque<Data> _data;
-    Status _status = Status::Idle;
-    std::deque<Data> _queue;
-    std::unique_ptr<QWebPage> _page;
+    std::vector<Data> _data;
+    std::unique_ptr<AucInfoLoader> _loader;
 };
 

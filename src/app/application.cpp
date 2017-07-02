@@ -14,7 +14,7 @@ Application::Application(int& argc, char** argv) :
     login();
 
     _auctionsModel->setNetworkAccessManager(_nam);
-    _bidsModel->setNetworkAccessManager(_nam);
+    _bidsModel->infoLoader().setNetworkAccessManager(_nam);
 
     _instance = this;
 }

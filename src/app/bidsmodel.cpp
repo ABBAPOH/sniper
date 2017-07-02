@@ -1,47 +1,32 @@
 #include "bidsmodel.h"
-#include "utils.h"
-
-#include <QtWebKit/QWebElement>
-#include <QtWebKitWidgets/QWebPage>
-#include <QtWebKitWidgets/QWebFrame>
 
 #include <QtCore/QDebug>
 #include <QtCore/QTimer>
-#include <QtCore/QUrlQuery>
 
 BidsModel::BidsModel() :
-    _page(new QWebPage)
+    _loader(new AucInfoLoader)
 {
-    connect(_page.get(), &QWebPage::loadFinished, this, &BidsModel::loadFinished);
-}
-
-std::shared_ptr<QNetworkAccessManager> BidsModel::networkAccessManager() const
-{
-    return _manager;
-}
-
-void BidsModel::setNetworkAccessManager(const std::shared_ptr<QNetworkAccessManager> &manager)
-{
-    if (_manager == manager)
-        return;
-
-    _manager = manager;
-    _page->setNetworkAccessManager(_manager.get());
+    connect(_loader.get(), &AucInfoLoader::loaded, this, &BidsModel::onInfoLoaded);
 }
 
 void BidsModel::addBid(const AuctionsModel::Data &data, int bid)
 {
+    const auto newRow = rowCount();
+
     Data d;
     d.AuctionsModel::Data::operator=(data);
     d.myBid = bid;
 
-    _queue.push_back(d);
+    d.timer = std::make_shared<QTimer>();
+    d.timer->setSingleShot(true);
+    d.timer->setProperty("id", newRow);
+    connect(d.timer.get(), &QTimer::timeout, this, &BidsModel::onTimeout);
 
-    beginInsertRows(QModelIndex(), rowCount(), rowCount());
+    _loader->load(d.url);
+
+    beginInsertRows(QModelIndex(), newRow, newRow);
     _data.push_back(d);
     endInsertRows();
-
-    processNextAddedBid();
 }
 
 int BidsModel::rowCount(const QModelIndex &parent) const
@@ -88,79 +73,30 @@ QVariant BidsModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-void BidsModel::processNextAddedBid()
+void BidsModel::onInfoLoaded(const AucInfoLoader::Info &info)
 {
-    if (_status != Status::Idle)
-        return;
-    if (_queue.empty())
-        return;
-
-    auto d = _queue.front();
-    _status = Status::Adding;
-    _page->mainFrame()->setUrl(d.url);
-}
-
-void BidsModel::loadFinished(bool ok)
-{
-    auto data = _queue.front();
-    _status = Status::Idle;
-    _queue.pop_front();
-    qDebug() << "loadFinished()" << ok;
-
-    const auto predicate = [&data](const Data &d)
+    const auto predicate = [&info](const Data &d)
     {
-        return data.url == d.url;
+        return info.url == d.url;
     };
     const auto it = std::find_if(_data.begin(), _data.end(), predicate);
     if (it == _data.end()) {
-        qWarning() << "Can't find auc with url" << data.url;
-        processNextAddedBid();
+        qCritical() << "Can't find auc with url" << info.url;
         return;
     }
 
-    qDebug() << _page->mainFrame()->url();
-    for (auto frame : _page->mainFrame()->childFrames()) {
-        const auto url = frame->baseUrl();
-        if (url.path() == "/auc/auc.php") {
-            data.aucId = QUrlQuery(url).queryItemValue("id").toInt();
-
-            auto body = frame->findFirstElement("body");
-
-            const char *constLines[] = {
-                "Текущая ставка, рубли: ",
-                "Шаг: ",
-                "До окончания аукциона: "
-            };
-
-            auto lines = body.toPlainText().split("\n", QString::SkipEmptyParts);
-            for (const auto &line : lines) {
-                if (line.startsWith(constLines[0])) {
-                    data.bid = line.mid(QString(constLines[0]).length()).toInt();
-                } else if (line.startsWith(constLines[1])) {
-                    data.step = line.mid(QString(constLines[1]).length()).toInt();
-                } else if (line.startsWith(constLines[2])) {
-                    data.duration = Utils::parseDuration(line.mid(QString(constLines[2]).length()));
-                }
-            }
-
-            break;
-        }
-    }
-
+    auto &data = *it;
     const auto begin = index(int(it - _data.begin()), 0);
     const auto end = index(int(it - _data.begin()), Columns::ColumnCount);
 
-    if (!data.timer) {
-        data.timer = std::make_shared<QTimer>();
-        data.timer->setSingleShot(true);
-        data.timer->setProperty("id", begin.row());
-        connect(data.timer.get(), &QTimer::timeout, this, &BidsModel::onTimeout);
-        processTimeout(data);
-    }
-    *it = data;
-    emit dataChanged(begin, end, {Qt::DisplayRole});
+    data.aucId = info.aucId;
+    data.bid = info.bid;
+    data.step = info.step;
+    data.duration = info.duration;
 
-    processNextAddedBid();
+    processDuration(data);
+
+    emit dataChanged(begin, end, {Qt::DisplayRole});
 }
 
 void BidsModel::onTimeout()
@@ -172,12 +108,12 @@ void BidsModel::onTimeout()
     }
 
     auto id = timer->property("id").toInt();
-    qDebug() << "Timout for row" << id;
-    _queue.push_back(_data.at(size_t(id)));
-    processNextAddedBid();
+    const auto &data = _data.at(size_t(id));
+    qDebug() << "Timout for " << data.lot;
+    _loader->load(data.url);
 }
 
-void BidsModel::processTimeout(BidsModel::Data &data)
+void BidsModel::processDuration(BidsModel::Data &data)
 {
     int delay = 0;
     int msecsInHour = 60 * 60 * 1000;

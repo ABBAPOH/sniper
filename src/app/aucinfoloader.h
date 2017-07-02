@@ -5,6 +5,7 @@
 #include <QtNetwork/QNetworkAccessManager>
 
 #include <QtCore/QObject>
+#include <QtCore/QLoggingCategory>
 #include <QtCore/QUrl>
 
 #include <deque>
@@ -48,3 +49,5 @@ private:
     Status _status = Status::Idle;
     std::deque<QUrl> _queue;
 };
+
+Q_DECLARE_LOGGING_CATEGORY(aucInfoLoader);

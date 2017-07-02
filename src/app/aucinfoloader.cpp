@@ -29,10 +29,13 @@ void AucInfoLoader::setNetworkAccessManager(const std::shared_ptr<QNetworkAccess
 
     _manager = manager;
     _page->setNetworkAccessManager(_manager.get());
+    qCDebug(aucInfoLoader) << "Network manager changed";
 }
 
 void AucInfoLoader::load(const QUrl &url)
 {
+    qCInfo(aucInfoLoader) << "Request to load" << url;
+
     _queue.push_back(url);
     processNextUrl();
 }
@@ -45,6 +48,9 @@ void AucInfoLoader::processNextUrl()
         return;
 
     auto url = _queue.front();
+
+    qCDebug(aucInfoLoader) << "Processing next url" << url;
+
     _status = Status::Adding;
     _page->mainFrame()->setUrl(url);
 }
@@ -54,12 +60,18 @@ void AucInfoLoader::loadFinished(bool ok)
     auto url = _queue.front();
     _status = Status::Idle;
     _queue.pop_front();
-    qDebug() << "loadFinished()" << ok;
+
+    if (!ok) {
+        qCWarning(aucInfoLoader) << "Failed to load page" << url;
+        processNextUrl();
+        return;
+    }
+
+    qCInfo(aucInfoLoader) << "Load finished";
 
     Info info;
     info.url = url;
 
-    qDebug() << _page->mainFrame()->url();
     for (auto frame : _page->mainFrame()->childFrames()) {
         const auto url = frame->baseUrl();
         if (url.path() == "/auc/auc.php") {
@@ -92,3 +104,5 @@ void AucInfoLoader::loadFinished(bool ok)
 
     processNextUrl();
 }
+
+Q_LOGGING_CATEGORY(aucInfoLoader, "sniper.aucInfoLoader");

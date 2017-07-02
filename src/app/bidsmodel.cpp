@@ -37,6 +37,10 @@ void BidsModel::addBid(const AuctionsModel::Data &data, int bid)
 
     _queue.push_back(d);
 
+    beginInsertRows(QModelIndex(), rowCount(), rowCount());
+    _data.push_back(d);
+    endInsertRows();
+
     processNextAddedBid();
 }
 
@@ -103,6 +107,17 @@ void BidsModel::loadFinished(bool ok)
     _queue.pop_front();
     qDebug() << "loadFinished()" << ok;
 
+    const auto predicate = [&data](const Data &d)
+    {
+        return data.url == d.url;
+    };
+    const auto it = std::find_if(_data.begin(), _data.end(), predicate);
+    if (it == _data.end()) {
+        qWarning() << "Can't find auc with url" << data.url;
+        processNextAddedBid();
+        return;
+    }
+
     qDebug() << _page->mainFrame()->url();
     for (auto frame : _page->mainFrame()->childFrames()) {
         const auto url = frame->baseUrl();
@@ -132,15 +147,18 @@ void BidsModel::loadFinished(bool ok)
         }
     }
 
-    data.timer = std::make_shared<QTimer>();
-    data.timer->setSingleShot(true);
-    data.timer->setProperty("id", rowCount());
-    connect(data.timer.get(), &QTimer::timeout, this, &BidsModel::onTimeout);
-    processTimeout(data);
+    const auto begin = index(int(it - _data.begin()), 0);
+    const auto end = index(int(it - _data.begin()), Columns::ColumnCount);
 
-    beginInsertRows(QModelIndex(), rowCount(), rowCount());
-    _data.push_back(data);
-    endInsertRows();
+    if (!data.timer) {
+        data.timer = std::make_shared<QTimer>();
+        data.timer->setSingleShot(true);
+        data.timer->setProperty("id", begin.row());
+        connect(data.timer.get(), &QTimer::timeout, this, &BidsModel::onTimeout);
+        processTimeout(data);
+    }
+    *it = data;
+    emit dataChanged(begin, end, {Qt::DisplayRole});
 
     processNextAddedBid();
 }
@@ -154,7 +172,9 @@ void BidsModel::onTimeout()
     }
 
     auto id = timer->property("id").toInt();
-    processTimeout(_data.at(size_t(id)));
+    qDebug() << "Timout for row" << id;
+    _queue.push_back(_data.at(size_t(id)));
+    processNextAddedBid();
 }
 
 void BidsModel::processTimeout(BidsModel::Data &data)

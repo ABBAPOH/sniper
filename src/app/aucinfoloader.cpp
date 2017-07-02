@@ -6,6 +6,8 @@
 
 #include <QtCore/QUrlQuery>
 
+static const char aboutBlankUrl[] = "about:blank";
+
 AucInfoLoader::AucInfoLoader(QObject *parent) :
     QObject(parent),
     _page(new QWebPage)
@@ -61,7 +63,7 @@ void AucInfoLoader::loadFinished(bool ok)
     if (!_page)
         return;
 
-    if (_page->mainFrame()->url() == QUrl("about:blank"))
+    if (_page->mainFrame()->url() == QUrl(aboutBlankUrl))
         return;
 
     auto url = _queue.front();
@@ -107,7 +109,7 @@ void AucInfoLoader::loadFinished(bool ok)
         }
     }
 
-    _page->mainFrame()->setUrl(QUrl("about:blank"));
+    _page->mainFrame()->setUrl(QUrl(aboutBlankUrl));
 
     emit loaded(info);
 

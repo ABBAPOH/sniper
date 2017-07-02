@@ -4,6 +4,7 @@
 #include "auctionsmodel.h"
 
 #include <QtCore/QAbstractTableModel>
+#include <QtCore/QLoggingCategory>
 #include <QtCore/QUrl>
 
 #include <deque>
@@ -59,3 +60,4 @@ private:
     std::unique_ptr<AucInfoLoader> _loader;
 };
 
+Q_DECLARE_LOGGING_CATEGORY(bidsModel);

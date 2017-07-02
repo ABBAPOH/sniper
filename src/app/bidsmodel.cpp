@@ -11,6 +11,8 @@ BidsModel::BidsModel() :
 
 void BidsModel::addBid(const AuctionsModel::Data &data, int bid)
 {
+    qCInfo(bidsModel) << "Request to add bid for auc" << data.lot << bid;
+
     const auto newRow = rowCount();
 
     Data d;
@@ -81,13 +83,15 @@ void BidsModel::onInfoLoaded(const AucInfoLoader::Info &info)
     };
     const auto it = std::find_if(_data.begin(), _data.end(), predicate);
     if (it == _data.end()) {
-        qCritical() << "Can't find auc with url" << info.url;
+        qCCritical(bidsModel) << "Can't find auc with url" << info.url;
         return;
     }
 
     auto &data = *it;
     const auto begin = index(int(it - _data.begin()), 0);
     const auto end = index(int(it - _data.begin()), Columns::ColumnCount);
+
+    qCDebug(bidsModel) << "Update data for auc" << data.lot;
 
     data.aucId = info.aucId;
     data.bid = info.bid;
@@ -103,13 +107,14 @@ void BidsModel::onTimeout()
 {
     auto timer = qobject_cast<QTimer *>(sender());
     if (!timer) {
-        qWarning() << "No timer object";
+        qCCritical(bidsModel) << "Sender object is not a QTimer";
         return;
     }
 
     auto id = timer->property("id").toInt();
     const auto &data = _data.at(size_t(id));
-    qDebug() << "Timout for " << data.lot;
+
+    qCInfo(bidsModel) << "Timeout for auc" << data.lot;
     _loader->load(data.url);
 }
 
@@ -148,9 +153,13 @@ void BidsModel::processDuration(BidsModel::Data &data)
 
     data.timer->start(delay);
     data.nextUpdate = QDateTime::currentDateTimeUtc().addMSecs(delay);
+
+    qCInfo(bidsModel) << "Next update for auc" << data.lot << "will be at" << data.nextUpdate;
 }
 
 void BidsModel::makeBid(const BidsModel::Data &data)
 {
-    qDebug() << "Making bid for " << data.lot << data.myBid;
+    qCInfo(bidsModel) << "Making bid for " << data.lot << data.myBid;
 }
+
+Q_LOGGING_CATEGORY(bidsModel, "sniper.bidsModel");

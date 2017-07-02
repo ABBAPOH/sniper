@@ -91,11 +91,19 @@ void AucInfoLoader::loadFinished(bool ok)
             const char *constLines[] = {
                 "Текущая ставка, рубли: ",
                 "Шаг: ",
-                "До окончания аукциона: "
+                "До окончания аукциона: ",
+                "Аукцион завершен."
             };
 
             auto lines = body.toPlainText().split("\n", QString::SkipEmptyParts);
             for (const auto &line : lines) {
+                if (line.contains(constLines[3])) {
+                    info.ended = true;
+                    info.duration = -1;
+                    info.step = -1;
+                    info.bid = -1;
+                    break;
+                }
                 if (line.startsWith(constLines[0])) {
                     info.bid = line.mid(QString(constLines[0]).length()).toInt();
                 } else if (line.startsWith(constLines[1])) {

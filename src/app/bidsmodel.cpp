@@ -94,6 +94,13 @@ void BidsModel::onInfoLoaded(const AucInfoLoader::Info &info)
 
     qCDebug(bidsModel) << "Update data for auc" << data.lot;
 
+    if (info.ended) {
+        beginRemoveRows(QModelIndex(), begin.row(), end.row());
+        _data.erase(it);
+        endRemoveRows();
+        return;
+    }
+
     data.aucId = info.aucId;
     data.bid = info.bid;
     data.step = info.step;

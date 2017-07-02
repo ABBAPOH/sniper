@@ -17,6 +17,7 @@ public:
     struct Info
     {
         QUrl url;
+        bool ended {false};
         int bid {0};
         int step {0};
         int aucId {0};

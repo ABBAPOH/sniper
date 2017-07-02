@@ -1,4 +1,5 @@
 #include "bidsmodel.h"
+#include "utils.h"
 
 #include <QtWebKit/QWebElement>
 #include <QtWebKitWidgets/QWebPage>
@@ -121,7 +122,7 @@ void BidsModel::loadFinished(bool ok)
                 } else if (line.startsWith(constLines[1])) {
                     data.step = line.mid(QString(constLines[1]).length()).toInt();
                 } else if (line.startsWith(constLines[2])) {
-                    data.duration = line.mid(QString(constLines[2]).length());
+                    data.duration = Utils::parseDuration(line.mid(QString(constLines[2]).length()));
                 }
             }
 

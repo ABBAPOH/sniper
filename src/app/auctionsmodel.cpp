@@ -1,4 +1,5 @@
 #include "auctionsmodel.h"
+#include "utils.h"
 
 #include <QtCore/QDebug>
 
@@ -6,8 +7,6 @@
 #include <QtNetwork/QNetworkRequest>
 #include <QtWebKit/QWebElement>
 #include <QtWebKitWidgets/QWebFrame>
-
-#include <QRegularExpression>
 
 AuctionsModel::AuctionsModel(QObject* parent) :
     QAbstractTableModel(parent),
@@ -98,7 +97,7 @@ void AuctionsModel::update()
 
 void AuctionsModel::loadFinished()
 {
-    QRegularExpression expr("((\\d+) д. ?)?((\\d+) ч. ?)?((\\d+) мин. ?)?((\\d+) с.)?$");
+
 
     beginResetModel();
     auto table = _page->mainFrame()->findFirstElement("table[class=reftable]");
@@ -118,21 +117,16 @@ void AuctionsModel::loadFinished()
         d.lot = rawData[0];
         d.seller = rawData[1];
         d.shipping = rawData[2];
-        d.duration = rawData[3];
-        if (d.duration == "Завершен")
+        const auto duration = rawData[3];
+        if (duration == "Завершен")
             continue;
-        auto match = expr.match(d.duration);
-        if (match.isValid()) {
-            const auto days = match.captured(2);
-            const auto hours = match.captured(4);
-            const auto mins = match.captured(6);
-            const auto secs = match.captured(8);
-            QTime time(hours.toInt(), mins.toInt(), secs.toInt());
-            QDateTime dateTime = QDateTime::currentDateTimeUtc();
-            dateTime = dateTime.addDays(days.toInt());
-            dateTime = dateTime.addMSecs(time.msecsSinceStartOfDay());
-            d.end = dateTime;
-        }
+
+        auto msecs = Utils::parseDuration(duration);
+
+        QDateTime dateTime = QDateTime::currentDateTimeUtc();
+        dateTime = dateTime.addMSecs(msecs);
+        d.end = dateTime;
+
         d.bid = rawData[4].toInt();
         _data.push_back(d);
     }

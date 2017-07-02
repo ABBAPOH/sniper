@@ -27,7 +27,7 @@ public:
         QString lot;
         QString seller;
         QString shipping;
-        QString duration;
+        qint64 duration;
         QDateTime end;
         int bid;
     };

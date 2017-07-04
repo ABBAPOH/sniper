@@ -1,9 +1,11 @@
 #include "application.h"
-
+#include "loghandler.h"
 #include "mainwindow.h"
 
 int main(int argc, char *argv[])
 {
+    LogHandler logger;
+
     Application app(argc, argv);
 
     MainWindow w;

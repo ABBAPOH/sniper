@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "loghandler.h"
 #include "bidsmodel.h"
 
 #include <QtCore/QCoreApplication>
@@ -11,6 +12,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    for (const auto &line : LogHandler::instance()->log()) {
+        onLogMessageAdded(line);
+    }
+    QObject::connect(LogHandler::instance(), &LogHandler::messageAdded, this, &MainWindow::onLogMessageAdded);
 
     connect(ui->actionQuit, &QAction::triggered, qApp, &QCoreApplication::quit);
     connect(ui->auctionsView, &QTreeView::doubleClicked, this, &MainWindow::onDoubleClicked);
@@ -58,4 +64,9 @@ void MainWindow::onDoubleClicked(const QModelIndex &index)
 
     const auto bidsModel =qobject_cast<BidsModel *>(ui->bidsView->model());
     bidsModel->addBid(data, bid);
+}
+
+void MainWindow::onLogMessageAdded(const QString& message)
+{
+    ui->logView->appendPlainText(message);
 }

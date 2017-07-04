@@ -22,6 +22,7 @@ public:
 
 private slots:
     void onDoubleClicked(const QModelIndex &idx);
+    void onLogMessageAdded(const QString &message);
 
 private:
     Ui::MainWindow *ui;

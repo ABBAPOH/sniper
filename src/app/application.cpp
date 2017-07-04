@@ -4,6 +4,7 @@
 #include <QUrlQuery>
 
 static Application *_instance = nullptr;
+static QtMessageHandler qtMessageHandler = nullptr;
 
 Application::Application(int& argc, char** argv) :
     QApplication(argc, argv),
@@ -11,12 +12,13 @@ Application::Application(int& argc, char** argv) :
     _auctionsModel(new AuctionsModel()),
     _bidsModel(new BidsModel())
 {
+    _instance = this;
+
     login();
 
     _auctionsModel->setNetworkAccessManager(_nam);
     _bidsModel->infoLoader().setNetworkAccessManager(_nam);
 
-    _instance = this;
 }
 
 Application::~Application()
@@ -86,3 +88,4 @@ void Application::onFinished()
     qDebug() << reply->errorString();
     qDebug() << QString::fromUtf8(reply->readAll());
 }
+

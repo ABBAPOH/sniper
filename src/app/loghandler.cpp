@@ -34,7 +34,7 @@ QString typeToString(QtMsgType type)
     default:
         break;
     }
-        return QString();
+    return QString();
 }
 
 void LogHandler::messageOutput(QtMsgType type, const QMessageLogContext& context, const QString& msg)

@@ -32,6 +32,20 @@ Application *Application::instance()
     return _instance;
 }
 
+void Application::makeBid(int auctionId, int bid)
+{
+    QUrlQuery postData;
+    postData.addQueryItem("auc_id", QString::number(auctionId));
+    postData.addQueryItem("bid", QString::number(bid));
+
+    QNetworkRequest request(QUrl("http://topdeck.ru/auc/makebid.php"));
+    request.setHeader(QNetworkRequest::ContentTypeHeader,
+        "application/x-www-form-urlencoded");
+
+    auto reply = _nam->post(request, postData.toString(QUrl::FullyEncoded).toUtf8());
+    connect(reply, &QNetworkReply::finished, this, &Application::onFinished);
+}
+
 void Application::login()
 {
     QUrlQuery postData;
@@ -61,20 +75,6 @@ void Application::loginFinished()
 
 //    makeBid(44030, 2750);
     _auctionsModel->update();
-}
-
-void Application::makeBid(int auctionId, int bid)
-{
-    QUrlQuery postData;
-    postData.addQueryItem("auc_id", QString::number(auctionId));
-    postData.addQueryItem("bid", QString::number(bid));
-
-    QNetworkRequest request(QUrl("http://topdeck.ru/auc/makebid.php"));
-    request.setHeader(QNetworkRequest::ContentTypeHeader,
-        "application/x-www-form-urlencoded");
-
-    auto reply = _nam->post(request, postData.toString(QUrl::FullyEncoded).toUtf8());
-    connect(reply, &QNetworkReply::finished, this, &Application::onFinished);
 }
 
 void Application::onFinished()

@@ -1,3 +1,4 @@
+#include "application.h"
 #include "bidsmodel.h"
 #include "utils.h"
 
@@ -167,7 +168,13 @@ void BidsModel::processDuration(BidsModel::Data &data)
 
 void BidsModel::makeBid(const BidsModel::Data &data)
 {
-    qCInfo(bidsModel) << "Making bid for " << data.lot << data.myBid;
+    if (data.bid + data.step > data.myBid) {
+        qCInfo(bidsModel) << "Current bid is higher than you bid, skipping auc"
+                          << data.lot;
+    } else {
+        qCInfo(bidsModel) << "Making bid" << data.myBid << "for" << data.lot;
+        Application::instance()->makeBid(data.aucId, data.myBid);
+    }
 }
 
 Q_LOGGING_CATEGORY(bidsModel, "sniper.bidsModel");

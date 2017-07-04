@@ -20,10 +20,12 @@ public:
 
     static Application *instance();
 
+public slots:
+    void makeBid(int auctionId, int bid);
+
 private slots:
     void login();
     void loginFinished();
-    void makeBid(int auctionId, int bid);
     void onFinished();
 
 private:

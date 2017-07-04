@@ -8,6 +8,7 @@
 #include <QtCore/QUrl>
 
 #include <deque>
+#include <memory>
 
 class BidsModel : public QAbstractTableModel
 {

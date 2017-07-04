@@ -9,6 +9,7 @@
 #include <QtCore/QUrl>
 
 #include <deque>
+#include <memory>
 
 class AucInfoLoader : public QObject
 {

@@ -105,7 +105,8 @@ void AucInfoLoader::loadFinished(bool ok)
                     break;
                 }
                 if (line.startsWith(constLines[0])) {
-                    info.bid = line.mid(QString(constLines[0]).length()).toInt();
+                    const auto subLine = line.mid(QString(constLines[0]).length());
+                    info.bid = subLine.split(" ").at(0).toInt();
                 } else if (line.startsWith(constLines[1])) {
                     info.step = line.mid(QString(constLines[1]).length()).toInt();
                 } else if (line.startsWith(constLines[2])) {
@@ -116,6 +117,8 @@ void AucInfoLoader::loadFinished(bool ok)
             break;
         }
     }
+
+    qCDebug(aucInfoLoader) << "info =" << info.url << info.aucId << info.step << info.duration << info.bid;
 
     _page->mainFrame()->setUrl(QUrl(aboutBlankUrl));
 

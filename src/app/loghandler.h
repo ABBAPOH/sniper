@@ -14,7 +14,6 @@ public:
     ~LogHandler();
 
 signals:
-    void messageAdded(const QString &msg);
     void messageAddedPrivate(const QString &msg);
 
 private:

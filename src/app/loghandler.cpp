@@ -55,5 +55,4 @@ void LogHandler::appendLogMessage(const QString& msg)
 {
     _log->write((msg + "\n").toUtf8());
     _log->flush();
-    emit messageAdded(msg);
 }

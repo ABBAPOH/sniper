@@ -43,7 +43,7 @@ private:
     void processNextUrl();
 
 private slots:
-    void loadFinished(bool ok);
+    void onFrameLoadFinished(bool ok);
 
 private:
     std::shared_ptr<QNetworkAccessManager> _manager;

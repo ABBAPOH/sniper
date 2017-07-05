@@ -6,13 +6,16 @@
 
 #include <QtCore/QUrlQuery>
 
-static const char aboutBlankUrl[] = "about:blank";
-
 AucInfoLoader::AucInfoLoader(QObject *parent) :
     QObject(parent),
     _page(new QWebPage)
 {
-    connect(_page.get(), &QWebPage::loadFinished, this, &AucInfoLoader::loadFinished);
+    auto onFrameLoadFinished = [this](QWebFrame *frame) {
+        frame->setProperty("isLoaded", false);
+        connect(frame, &QWebFrame::loadFinished,
+                this, &AucInfoLoader::onFrameLoadFinished);
+    };
+    connect(_page.get(), &QWebPage::frameCreated, this, onFrameLoadFinished);
 }
 
 AucInfoLoader::~AucInfoLoader()
@@ -51,79 +54,75 @@ void AucInfoLoader::processNextUrl()
         return;
 
     auto url = _queue.front();
-
+    _queue.pop_front();
     qCDebug(aucInfoLoader) << "Processing next url" << url;
 
     _status = Status::Adding;
+    _page->mainFrame()->setProperty("isLoaded", false);
     _page->mainFrame()->load(url);
 }
 
-void AucInfoLoader::loadFinished(bool ok)
+void AucInfoLoader::onFrameLoadFinished(bool ok)
 {
-    if (!_page)
-        return;
-
-    if (_page->mainFrame()->url() == QUrl(aboutBlankUrl))
-        return;
-
-    auto url = _queue.front();
-    _status = Status::Idle;
-    _queue.pop_front();
+    const auto frame = qobject_cast<QWebFrame *>(sender());
+    const auto frameUrl = frame->baseUrl();
 
     if (!ok) {
-        qCWarning(aucInfoLoader) << "Failed to load page" << url;
+        qCWarning(aucInfoLoader) << "Failed to load frame" << frameUrl;
+        _status = Status::Idle;
         processNextUrl();
         return;
     }
 
-    qCInfo(aucInfoLoader) << "Load finished";
+    frame->setProperty("isLoaded", true);
 
-    Info info;
-    info.url = url;
+    qCDebug(aucInfoLoader) << "Loaded frame" << frameUrl;
 
-    for (auto frame : _page->mainFrame()->childFrames()) {
-        const auto url = frame->baseUrl();
-        if (url.path() == "/auc/auc.php") {
-            info.aucId = QUrlQuery(url).queryItemValue("id").toInt();
+    if (frameUrl.path() == "/auc/auc.php") {
+        Info info;
+        info.url = _page->mainFrame()->url();
+        info.aucId = QUrlQuery(frameUrl).queryItemValue("id").toInt();
 
-            auto body = frame->findFirstElement("body");
+        auto body = frame->findFirstElement("body");
 
-            const char *constLines[] = {
-                "Текущая ставка, рубли: ",
-                "Шаг: ",
-                "До окончания аукциона: ",
-                "Аукцион завершен."
-            };
+        const char *constLines[] = {
+            "Текущая ставка, рубли: ",
+            "Шаг: ",
+            "До окончания аукциона: ",
+            "Аукцион завершен."
+        };
 
-            auto lines = body.toPlainText().split("\n", QString::SkipEmptyParts);
-            for (const auto &line : lines) {
-                if (line.contains(constLines[3])) {
-                    info.ended = true;
-                    info.duration = -1;
-                    info.step = -1;
-                    info.bid = -1;
-                    break;
-                }
-                if (line.startsWith(constLines[0])) {
-                    const auto subLine = line.mid(QString(constLines[0]).length());
-                    info.bid = subLine.split(" ").at(0).toInt();
-                } else if (line.startsWith(constLines[1])) {
-                    info.step = line.mid(QString(constLines[1]).length()).toInt();
-                } else if (line.startsWith(constLines[2])) {
-                    info.duration = Utils::parseDuration(line.mid(QString(constLines[2]).length()));
-                }
+        auto lines = body.toPlainText().split("\n", QString::SkipEmptyParts);
+        for (const auto &line : lines) {
+            if (line.contains(constLines[3])) {
+                info.ended = true;
+                info.duration = -1;
+                info.step = -1;
+                info.bid = -1;
+                break;
             }
-
-            break;
+            if (line.startsWith(constLines[0])) {
+                const auto subLine = line.mid(QString(constLines[0]).length());
+                info.bid = subLine.split(" ").at(0).toInt();
+            } else if (line.startsWith(constLines[1])) {
+                info.step = line.mid(QString(constLines[1]).length()).toInt();
+            } else if (line.startsWith(constLines[2])) {
+                info.duration = Utils::parseDuration(line.mid(QString(constLines[2]).length()));
+            }
         }
+
+        emit loaded(info);
     }
 
-    qCDebug(aucInfoLoader) << "info =" << info.url << info.aucId << info.step << info.duration << info.bid;
+    auto frames = _page->findChildren<QWebFrame *>();
+    for (const auto frame : frames) {
+        if (!frame->property("isLoaded").toBool())
+            return; // still have loading frames
+    }
 
-    _page->mainFrame()->setUrl(QUrl(aboutBlankUrl));
+    qCDebug(aucInfoLoader) << "All frames are loaded";
 
-    emit loaded(info);
-
+    _status = Status::Idle;
     processNextUrl();
 }
 

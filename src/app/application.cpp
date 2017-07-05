@@ -4,7 +4,6 @@
 #include <QUrlQuery>
 
 static Application *_instance = nullptr;
-static QtMessageHandler qtMessageHandler = nullptr;
 
 Application::Application(int& argc, char** argv) :
     QApplication(argc, argv),

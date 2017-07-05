@@ -1,7 +1,9 @@
 #pragma once
 
 #include <QtCore/QObject>
+#include <QtCore/QFile>
 
+#include <memory>
 #include <vector>
 
 class LogHandler : public QObject
@@ -10,10 +12,6 @@ class LogHandler : public QObject
 public:
     LogHandler();
     ~LogHandler();
-
-    const std::vector<QString> &log() const { return _log; }
-
-    static LogHandler *instance();
 
 signals:
     void messageAdded(const QString &msg);
@@ -24,5 +22,5 @@ private:
     void appendLogMessage(const QString &msg);
 
 private:
-    std::vector<QString> _log;
+    std::unique_ptr<QFile> _log;
 };

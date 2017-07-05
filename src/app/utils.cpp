@@ -1,5 +1,6 @@
 #include "utils.h"
 
+#include <QtCore/QStandardPaths>
 #include <QRegularExpression>
 #include <QTime>
 
@@ -31,6 +32,12 @@ QString durationToString(qint64 msecs)
     const auto minutes = int((msecs / 1000 / 60) - (days * 24 + hours) * 60);
     const auto secs = int((msecs / 1000) - ((days * 24 + hours) * 60 + minutes) * 60);
     return QStringLiteral("%1:%2").arg(days).arg(QTime(hours, minutes, secs).toString("hh:mm:ss"));
+}
+
+QString logPath()
+{
+    return QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+            + "/sniper.log";
 }
 
 } // namespace Utils

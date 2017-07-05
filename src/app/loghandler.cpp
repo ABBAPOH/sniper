@@ -1,24 +1,28 @@
 #include "loghandler.h"
+#include "utils.h"
+
+#include <QtCore/QDebug>
 
 static LogHandler *_instance = nullptr;
 static QtMessageHandler qtMessageHandler = nullptr;
 
-LogHandler::LogHandler()
+LogHandler::LogHandler() :
+    _log(new QFile(Utils::logPath()))
 {
     _instance = this;
+    if (!_log->open(QIODevice::WriteOnly))
+        qCritical() << "Can't open log file" << Utils::logPath();
+
     connect(this, &LogHandler::messageAddedPrivate,
             this, &LogHandler::appendLogMessage);
     qtMessageHandler = qInstallMessageHandler(messageOutput);
+
+    qInfo() << "Writing log at" << Utils::logPath();
 }
 
 LogHandler::~LogHandler()
 {
     _instance = nullptr;
-}
-
-LogHandler *LogHandler::instance()
-{
-    return _instance;
 }
 
 QString typeToString(QtMsgType type)
@@ -49,6 +53,7 @@ void LogHandler::messageOutput(QtMsgType type, const QMessageLogContext& context
 
 void LogHandler::appendLogMessage(const QString& msg)
 {
-    _log.push_back(msg);
+    _log->write((msg + "\n").toUtf8());
+    _log->flush();
     emit messageAdded(msg);
 }

@@ -33,6 +33,7 @@ public:
     const AucInfoLoader &infoLoader() const { return *_loader.get(); }
 
     void addBid(const AuctionsModel::Data &data, int bid);
+    void update(const QModelIndex &index);
 
     // QAbstractItemModel interface
 public:

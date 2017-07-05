@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->actionQuit, &QAction::triggered, qApp, &QCoreApplication::quit);
     connect(ui->auctionsView, &QTreeView::doubleClicked, this, &MainWindow::onDoubleClicked);
+    connect(ui->bidsView, &QTreeView::doubleClicked, this, &MainWindow::onDoubleClicked2);
 }
 
 MainWindow::~MainWindow()
@@ -64,6 +65,17 @@ void MainWindow::onDoubleClicked(const QModelIndex &index)
 
     const auto bidsModel =qobject_cast<BidsModel *>(ui->bidsView->model());
     bidsModel->addBid(data, bid);
+}
+
+void MainWindow::onDoubleClicked2(const QModelIndex &index)
+{
+    if (!index.isValid()) {
+        qWarning() << "Invalid index";
+        return;
+    }
+
+    const auto bidsModel = qobject_cast<BidsModel *>(ui->bidsView->model());
+    bidsModel->update(index);
 }
 
 void MainWindow::onLogMessageAdded(const QString& message)

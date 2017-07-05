@@ -33,6 +33,15 @@ void BidsModel::addBid(const AuctionsModel::Data &data, int bid)
     endInsertRows();
 }
 
+void BidsModel::update(const QModelIndex &index)
+{
+    if (!index.isValid())
+        return;
+
+    const auto data = _data.at(size_t(index.row()));
+    _loader->load(data.url);
+}
+
 int BidsModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
@@ -173,7 +182,7 @@ void BidsModel::makeBid(const BidsModel::Data &data)
                           << data.lot;
     } else {
         qCInfo(bidsModel) << "Making bid" << data.myBid << "for" << data.lot;
-        Application::instance()->makeBid(data.aucId, data.myBid);
+//        Application::instance()->makeBid(data.aucId, data.myBid);
     }
 }
 

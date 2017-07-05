@@ -2,6 +2,8 @@
 #include "utils.h"
 
 #include <QtCore/QDebug>
+#include <QtCore/QDir>
+#include <QtCore/QFileInfo>
 
 static LogHandler *_instance = nullptr;
 static QtMessageHandler qtMessageHandler = nullptr;

@@ -1,0 +1,19 @@
+{
+    "urls" : {
+        "makebid" : "http://topdeck.ru/auc/makebid.php",
+        "index.php" : "http://topdeck.ru/forum/index.php?",
+        "login" : "http://topdeck.ru/forum/index.php?app=core&module=global&section=login&do=process"
+    },
+    "keys" : {
+        "login" : {
+            "referer" : "referer",
+            "username" : "username",
+            "password" : "password",
+            "rememberMe" : "rememberMe"
+        },
+        "makebid" : {
+            "auc_id" : "auc_id",
+            "bid" : "bid"
+        }
+    }
+}

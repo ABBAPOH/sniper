@@ -5,8 +5,9 @@
 
 static Application *_instance = nullptr;
 
-Application::Application(int& argc, char** argv) :
+Application::Application(int& argc, char** argv, const std::shared_ptr<Config> &config) :
     QApplication(argc, argv),
+    _config(config),
     _nam(new QNetworkAccessManager()),
     _auctionsModel(new AuctionsModel()),
     _bidsModel(new BidsModel())
@@ -35,11 +36,14 @@ Application *Application::instance()
 
 void Application::makeBid(int auctionId, int bid)
 {
-    QUrlQuery postData;
-    postData.addQueryItem("auc_id", QString::number(auctionId));
-    postData.addQueryItem("bid", QString::number(bid));
+    const auto urls = _config->data()["urls"].toMap();
+    const auto keys = _config->data()["keys"].toMap().value("login").toMap();
 
-    QNetworkRequest request(QUrl("http://topdeck.ru/auc/makebid.php"));
+    QUrlQuery postData;
+    postData.addQueryItem(keys["auc_id"].toString(), QString::number(auctionId));
+    postData.addQueryItem(keys["bid"].toString(), QString::number(bid));
+
+    QNetworkRequest request(QUrl(urls["makebid"].toString()));
     request.setHeader(QNetworkRequest::ContentTypeHeader,
         "application/x-www-form-urlencoded");
 
@@ -50,14 +54,18 @@ void Application::makeBid(int auctionId, int bid)
 void Application::login()
 {
     QUrlQuery postData;
-    postData.addQueryItem("referer", "http://topdeck.ru/forum/index.php?");
+
+    const auto urls = _config->data()["urls"].toMap();
+    const auto keys = _config->data()["keys"].toMap().value("login").toMap();
+
+    postData.addQueryItem(keys["referer"].toString(), urls["urls/index.php"].toString());
 //    postData.addQueryItem("username", "ஐWingS_OF_ButterFlyஐ");
 //    postData.addQueryItem("password", "f5a-tJF-qQZ-raR");
-    postData.addQueryItem("username", "ABBAPOH");
-    postData.addQueryItem("password", "idkfa123");
-    postData.addQueryItem("rememberMe", "1");
+    postData.addQueryItem(keys["username"].toString(), "ABBAPOH");
+    postData.addQueryItem(keys["password"].toString(), "idkfa123");
+    postData.addQueryItem(keys["rememberMe"].toString(), "1");
 
-    QNetworkRequest request(QUrl("http://topdeck.ru/forum/index.php?app=core&module=global&section=login&do=process"));
+    QNetworkRequest request(QUrl(urls["login"].toString()));
     request.setHeader(QNetworkRequest::ContentTypeHeader,
         "application/x-www-form-urlencoded");
 

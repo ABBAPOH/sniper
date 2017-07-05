@@ -10,7 +10,13 @@ MyApp {
     name: "Sniper"
     targetName: mym.app_target
 
-    files: [ "*.cpp", "*.h", "*.ui" ]
+    files: [
+        "*.cpp",
+        "*.h",
+        "*.ui",
+        "*.qrc",
+        "*.json"
+    ]
 
 //    bundle.infoPlistFile: "Info.plist.in"
 

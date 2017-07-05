@@ -40,5 +40,11 @@ QString logPath()
             + "/sniper.log";
 }
 
+QString configPath()
+{
+    return QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+            + "/config.json";
+}
+
 } // namespace Utils
 

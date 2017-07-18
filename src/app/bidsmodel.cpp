@@ -182,7 +182,7 @@ void BidsModel::makeBid(const BidsModel::Data &data)
                           << data.lot;
     } else {
         qCInfo(bidsModel) << "Making bid" << data.myBid << "for" << data.lot;
-//        Application::instance()->makeBid(data.aucId, data.myBid);
+        Application::instance()->makeBid(data.aucId, data.myBid);
     }
 }
 

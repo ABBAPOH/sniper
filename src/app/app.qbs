@@ -8,6 +8,7 @@ MyApp {
     Depends { name: "Qt.webkitwidgets" }
 
     name: "Sniper"
+    targetName: mym.app_target
 
     files: [ "*.cpp", "*.h", "*.ui" ]
 

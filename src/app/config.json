@@ -6,6 +6,10 @@
     },
     "keys" : {
         "login" : {
+            "#user_navigation": "#user_navigation",
+            "class": "class",
+            "logged_in": "logged_in",
+            "not_logged_in": "not_logged_in",
             "referer" : "referer",
             "username" : "username",
             "password" : "password",

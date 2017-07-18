@@ -9,7 +9,18 @@
 #include <QDir>
 #include <QStandardPaths>
 
-#include <QProgressDialog>
+#include <QtWidgets/QProgressDialog>
+
+QProgressDialog *createProgressDialog()
+{
+    const auto dialog = new QProgressDialog();
+    dialog->setWindowTitle(Application::tr("Logging in"));
+    dialog->setMinimum(0);
+    dialog->setMaximum(0);
+    dialog->show();
+    QObject::connect(dialog, &QProgressDialog::canceled, qApp, &QCoreApplication::quit);
+    return dialog;
+}
 
 int main(int argc, char *argv[])
 {
@@ -30,12 +41,7 @@ int main(int argc, char *argv[])
 
     Application app(argc, argv, cfg);
 
-    const auto proggressDialog = new QProgressDialog();
-    proggressDialog->setWindowTitle(Application::tr("Logging in"));
-    proggressDialog->setMinimum(0);
-    proggressDialog->setMaximum(0);
-    proggressDialog->show();
-    QObject::connect(proggressDialog, &QProgressDialog::canceled, &app, &QCoreApplication::quit);
+    const auto proggressDialog = createProgressDialog();
 
     MainWindow w;
 

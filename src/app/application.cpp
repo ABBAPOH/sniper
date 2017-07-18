@@ -12,8 +12,8 @@ Application::Application(int& argc, char** argv, const std::shared_ptr<Config> &
     _config(config),
     _nam(new QNetworkAccessManager()),
     _loginManager(std::make_shared<LoginManager>(config)),
-    _auctionsModel(new AuctionsModel()),
-    _bidsModel(new BidsModel())
+    _auctionsModel(std::make_shared<AuctionsModel>()),
+    _bidsModel(std::make_shared<BidsModel>())
 {
     _instance = this;
 

@@ -23,24 +23,32 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::setAuctionsModel(QAbstractItemModel* model)
+void MainWindow::setAuctionsModel(std::shared_ptr<AuctionsModel> model)
 {
-    if (ui->auctionsView->model()) {
+    if (_auctionsModel == model)
+        return;
+
+    if (_auctionsModel) {
         disconnect(ui->actionUpdateAuctions, &QAction::triggered,
-                   qobject_cast<AuctionsModel*>(ui->auctionsView->model()), &AuctionsModel::update);
+                   _auctionsModel.get(), &AuctionsModel::update);
     }
 
-    ui->auctionsView->setModel(model);
+    _auctionsModel = model;
+    ui->auctionsView->setModel(model.get());
 
     if (model) {
         connect(ui->actionUpdateAuctions, &QAction::triggered,
-                qobject_cast<AuctionsModel*>(ui->auctionsView->model()), &AuctionsModel::update);
+                _auctionsModel.get(), &AuctionsModel::update);
     }
 }
 
-void MainWindow::setBidsModel(QAbstractItemModel *model)
+void MainWindow::setBidsModel(std::shared_ptr<BidsModel> model)
 {
-    ui->bidsView->setModel(model);
+    if (_bidsModel == model)
+        return;
+
+    _bidsModel = model;
+    ui->bidsView->setModel(model.get());
 }
 
 void MainWindow::onDoubleClicked(const QModelIndex &index)

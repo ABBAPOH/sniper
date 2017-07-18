@@ -17,8 +17,8 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void setAuctionsModel(QAbstractItemModel *model);
-    void setBidsModel(QAbstractItemModel *model);
+    void setAuctionsModel(std::shared_ptr<AuctionsModel> model);
+    void setBidsModel(std::shared_ptr<BidsModel> model);
 
 private slots:
     void onDoubleClicked(const QModelIndex &idx);
@@ -26,4 +26,6 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    std::shared_ptr<AuctionsModel> _auctionsModel;
+    std::shared_ptr<BidsModel> _bidsModel;
 };

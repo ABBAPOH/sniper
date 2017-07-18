@@ -19,8 +19,8 @@ public:
     ~Application();
 
     const std::shared_ptr<LoginManager> &loginManager() const;
-    AuctionsModel *auctionsModel() const { return _auctionsModel.get(); }
-    BidsModel *bidsModel() const { return _bidsModel.get(); }
+    const std::shared_ptr<AuctionsModel> &auctionsModel() const { return _auctionsModel; }
+    const std::shared_ptr<BidsModel> bidsModel() const { return _bidsModel; }
 
     static Application *instance();
 
@@ -34,8 +34,8 @@ private:
     std::shared_ptr<Config> _config;
     std::shared_ptr<QNetworkAccessManager> _nam;
     std::shared_ptr<LoginManager> _loginManager;
-    std::unique_ptr<AuctionsModel> _auctionsModel;
-    std::unique_ptr<BidsModel> _bidsModel;
+    std::shared_ptr<AuctionsModel> _auctionsModel;
+    std::shared_ptr<BidsModel> _bidsModel;
 
 
 };

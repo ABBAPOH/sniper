@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>config.json</file>
+        <file>sniper.png</file>
     </qresource>
 </RCC>

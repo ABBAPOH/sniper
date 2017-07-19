@@ -6,6 +6,9 @@
 #include <QtNetwork/QNetworkReply>
 
 #include <QtWidgets/QProgressDialog>
+#include <QtWidgets/QSystemTrayIcon>
+
+#include <QtGui/QIcon>
 
 #include <QtCore/QUrlQuery>
 
@@ -28,13 +31,20 @@ Application::Application(int& argc, char** argv, const std::shared_ptr<Config> &
     _nam(new QNetworkAccessManager()),
     _loginManager(std::make_shared<LoginManager>(config)),
     _auctionsModel(std::make_shared<AuctionsModel>()),
-    _bidsModel(std::make_shared<BidsModel>())
+    _bidsModel(std::make_shared<BidsModel>()),
+    _systemTray(new QSystemTrayIcon())
 {
     _instance = this;
 
     _auctionsModel->setNetworkAccessManager(_nam);
     _bidsModel->infoLoader().setNetworkAccessManager(_nam);
     _loginManager->setNetworkAccessManager(_nam);
+
+    _systemTray->setIcon(QIcon(":/sniper.png"));
+    _systemTray->setToolTip(tr("Sniper"));
+
+    connect(_systemTray.get(), &QSystemTrayIcon::activated,
+            this, &Application::onTrayActivated);
 }
 
 Application::~Application()
@@ -63,6 +73,7 @@ int Application::exec()
                      this, &Application::onLoginChecked);
 
     _loginManager->checkLogin();
+    _systemTray->show();
 
     return QApplication::exec();
 }
@@ -125,7 +136,14 @@ void Application::onLoginChecked(bool logined)
         _mainWindow->setAuctionsModel(_auctionsModel);
         _mainWindow->setBidsModel(_bidsModel);
         _mainWindow->show();
+        setQuitOnLastWindowClosed(false);
     } else {
         showLoginDialog();
     }
+}
+
+void Application::onTrayActivated()
+{
+    if (_mainWindow)
+        _mainWindow->show();
 }

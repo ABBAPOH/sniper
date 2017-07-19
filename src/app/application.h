@@ -13,6 +13,7 @@ class LoginManager;
 class LoginDialog;
 class MainWindow;
 class QProgressDialog;
+class QSystemTrayIcon;
 
 class Application: public QApplication
 {
@@ -37,6 +38,7 @@ private:
     void onLoginDialogAccepted();
     void showLoginDialog();
     void onLoginChecked(bool logined);
+    void onTrayActivated();
 
 private:
     std::shared_ptr<Config> _config;
@@ -47,4 +49,5 @@ private:
     std::unique_ptr<QProgressDialog> _progressDialog;
     std::unique_ptr<LoginDialog> _loginDialog;
     std::unique_ptr<MainWindow> _mainWindow;
+    std::unique_ptr<QSystemTrayIcon> _systemTray;
 };

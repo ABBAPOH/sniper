@@ -59,33 +59,8 @@ int Application::exec()
 {
     _progressDialog = createProgressDialog();
 
-    auto onLoginChecked = [this](bool logined)
-    {
-        _progressDialog->hide();
-        if (logined) {
-            _progressDialog.reset();
-
-            _auctionsModel->update();
-            _mainWindow = std::unique_ptr<MainWindow>(new MainWindow());
-            _mainWindow->setAuctionsModel(_auctionsModel);
-            _mainWindow->setBidsModel(_bidsModel);
-            _mainWindow->show();
-        } else {
-            _loginDialog = std::unique_ptr<LoginDialog>(new LoginDialog());
-            _loginDialog->setLogin(_loginManager->lastUsedLogin());
-            auto onAccepted = [this]()
-            {
-                _loginManager->login(_loginDialog->login(), _loginDialog->password());
-                _progressDialog->show();
-                _loginDialog.reset();
-            };
-
-            QObject::connect(_loginDialog.get(), &QDialog::rejected, this, &QCoreApplication::quit);
-            QObject::connect(_loginDialog.get(), &QDialog::accepted, this, onAccepted);
-            _loginDialog->show();
-        }
-    };
-    QObject::connect(_loginManager.get(), &LoginManager::loginChecked, this, onLoginChecked);
+    QObject::connect(_loginManager.get(), &LoginManager::loginChecked,
+                     this, &Application::onLoginChecked);
 
     _loginManager->checkLogin();
 
@@ -119,3 +94,38 @@ void Application::onFinished()
     qDebug() << QString::fromUtf8(reply->readAll());
 }
 
+void Application::onLoginDialogAccepted()
+{
+    _loginManager->login(_loginDialog->login(), _loginDialog->password());
+    _progressDialog->show();
+    _loginDialog.reset();
+}
+
+void Application::showLoginDialog()
+{
+    if (!_loginDialog) {
+        _loginDialog = std::unique_ptr<LoginDialog>(new LoginDialog());
+        QObject::connect(_loginDialog.get(), &QDialog::rejected,
+                         this, &QCoreApplication::quit);
+        QObject::connect(_loginDialog.get(), &QDialog::accepted,
+                         this, &Application::onLoginDialogAccepted);
+    }
+    _loginDialog->setLogin(_loginManager->lastUsedLogin());
+    _loginDialog->show();
+}
+
+void Application::onLoginChecked(bool logined)
+{
+    _progressDialog->hide();
+    if (logined) {
+        _progressDialog.reset();
+
+        _auctionsModel->update();
+        _mainWindow = std::unique_ptr<MainWindow>(new MainWindow());
+        _mainWindow->setAuctionsModel(_auctionsModel);
+        _mainWindow->setBidsModel(_bidsModel);
+        _mainWindow->show();
+    } else {
+        showLoginDialog();
+    }
+}

@@ -32,8 +32,11 @@ public:
 public slots:
     void makeBid(int auctionId, int bid);
 
-private slots:
+private:
     void onFinished();
+    void onLoginDialogAccepted();
+    void showLoginDialog();
+    void onLoginChecked(bool logined);
 
 private:
     std::shared_ptr<Config> _config;

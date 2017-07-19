@@ -1,9 +1,24 @@
 #include "application.h"
-
 #include "loginmanager.h"
+#include "logindialog.h"
+#include "mainwindow.h"
 
-#include <QNetworkReply>
-#include <QUrlQuery>
+#include <QtNetwork/QNetworkReply>
+
+#include <QtWidgets/QProgressDialog>
+
+#include <QtCore/QUrlQuery>
+
+static std::unique_ptr<QProgressDialog> createProgressDialog()
+{
+    std::unique_ptr<QProgressDialog> dialog(new QProgressDialog());
+    dialog->setWindowTitle(Application::tr("Logging in"));
+    dialog->setMinimum(0);
+    dialog->setMaximum(0);
+    dialog->show();
+    QObject::connect(dialog.get(), &QProgressDialog::canceled, qApp, &QCoreApplication::quit);
+    return dialog;
+}
 
 static Application *_instance = nullptr;
 
@@ -38,6 +53,42 @@ Application *Application::instance()
         qFatal("Must construct Application object before calling instance() method");
 
     return _instance;
+}
+
+int Application::exec()
+{
+    _progressDialog = createProgressDialog();
+
+    auto onLoginChecked = [this](bool logined)
+    {
+        _progressDialog->hide();
+        if (logined) {
+            _progressDialog.reset();
+
+            _auctionsModel->update();
+            _mainWindow = std::unique_ptr<MainWindow>(new MainWindow());
+            _mainWindow->setAuctionsModel(_auctionsModel);
+            _mainWindow->setBidsModel(_bidsModel);
+            _mainWindow->show();
+        } else {
+            _loginDialog = std::unique_ptr<LoginDialog>(new LoginDialog());
+            auto onAccepted = [this]()
+            {
+                _loginManager->login(_loginDialog->login(), _loginDialog->password());
+                _progressDialog->show();
+                _loginDialog.reset();
+            };
+
+            QObject::connect(_loginDialog.get(), &QDialog::rejected, this, &QCoreApplication::quit);
+            QObject::connect(_loginDialog.get(), &QDialog::accepted, this, onAccepted);
+            _loginDialog->show();
+        }
+    };
+    QObject::connect(_loginManager.get(), &LoginManager::loginChecked, this, onLoginChecked);
+
+    _loginManager->checkLogin();
+
+    return QApplication::exec();
 }
 
 void Application::makeBid(int auctionId, int bid)

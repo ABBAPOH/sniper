@@ -10,6 +10,9 @@
 #include <memory>
 
 class LoginManager;
+class LoginDialog;
+class MainWindow;
+class QProgressDialog;
 
 class Application: public QApplication
 {
@@ -24,6 +27,8 @@ public:
 
     static Application *instance();
 
+    int exec();
+
 public slots:
     void makeBid(int auctionId, int bid);
 
@@ -36,6 +41,7 @@ private:
     std::shared_ptr<LoginManager> _loginManager;
     std::shared_ptr<AuctionsModel> _auctionsModel;
     std::shared_ptr<BidsModel> _bidsModel;
-
-
+    std::unique_ptr<QProgressDialog> _progressDialog;
+    std::unique_ptr<LoginDialog> _loginDialog;
+    std::unique_ptr<MainWindow> _mainWindow;
 };

@@ -17,7 +17,7 @@ bool Config::load()
     QFile file(path);
 
 #ifdef QT_DEBUG
-    if (!QFile::remove(path)) {
+    if (file.exists() && !file.remove()) {
         qCCritical(config) << "Can't remove config from" << path;
         return false;
     }

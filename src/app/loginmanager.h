@@ -5,6 +5,8 @@
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QObject>
 
+#include <memory>
+
 class QNetworkAccessManager;
 class QWebPage;
 
@@ -17,6 +19,8 @@ public:
 
     std::shared_ptr<QNetworkAccessManager> networkAccessManager() const;
     void setNetworkAccessManager(const std::shared_ptr<QNetworkAccessManager> &manager);
+
+    QString lastUsedLogin() const;
 
 public slots:
     void checkLogin();

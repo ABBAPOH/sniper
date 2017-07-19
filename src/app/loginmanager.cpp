@@ -8,6 +8,7 @@
 #include <QtNetwork/QNetworkReply>
 #include <QtNetwork/QNetworkRequest>
 
+#include <QtCore/QSettings>
 #include <QtCore/QUrl>
 #include <QtCore/QUrlQuery>
 
@@ -35,6 +36,12 @@ void LoginManager::setNetworkAccessManager(const std::shared_ptr<QNetworkAccessM
     _page->setNetworkAccessManager(_manager.get());
 }
 
+QString LoginManager::lastUsedLogin() const
+{
+    QSettings settings;
+    return settings.value("lastUsedLogin").toString();
+}
+
 void LoginManager::checkLogin()
 {
     _page->mainFrame()->load(QUrl(_config->value("urls/index.php").toString()));
@@ -42,6 +49,9 @@ void LoginManager::checkLogin()
 
 void LoginManager::login(const QString &login, const QString &password)
 {
+    QSettings settings;
+    settings.setValue("lastUsedLogin", login);
+
     QUrlQuery postData;
 
     const auto urls = _config->data()["urls"].toMap();

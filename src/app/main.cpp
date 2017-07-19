@@ -9,6 +9,7 @@
 int main(int argc, char *argv[])
 {
     QCoreApplication::setApplicationName("Sniper");
+    QCoreApplication::setOrganizationDomain("sniper.abbapohr.org");
 
     QFileInfo info(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
     if (!info.exists()) {

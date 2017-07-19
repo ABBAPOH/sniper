@@ -72,6 +72,7 @@ int Application::exec()
             _mainWindow->show();
         } else {
             _loginDialog = std::unique_ptr<LoginDialog>(new LoginDialog());
+            _loginDialog->setLogin(_loginManager->lastUsedLogin());
             auto onAccepted = [this]()
             {
                 _loginManager->login(_loginDialog->login(), _loginDialog->password());

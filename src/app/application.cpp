@@ -95,6 +95,17 @@ void Application::makeBid(int auctionId, int bid)
     connect(reply, &QNetworkReply::finished, this, &Application::onFinished);
 }
 
+bool Application::event(QEvent *e)
+{
+    if (e->type() == QEvent::ApplicationStateChange) {
+        if (applicationState() == Qt::ApplicationActive) {
+            if (_mainWindow)
+                _mainWindow->show();
+        }
+    }
+    return QApplication::event(e);
+}
+
 void Application::onFinished()
 {
     auto reply = qobject_cast<QNetworkReply *>(sender());

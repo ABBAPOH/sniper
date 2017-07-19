@@ -33,6 +33,9 @@ public:
 public slots:
     void makeBid(int auctionId, int bid);
 
+protected:
+    bool event(QEvent *e);
+
 private:
     void onFinished();
     void onLoginDialogAccepted();

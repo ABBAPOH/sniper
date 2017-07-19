@@ -6,6 +6,7 @@ MyApp {
     Depends { name: "Qt.network" }
     Depends { name: "Qt.widgets" }
     Depends { name: "Qt.webkitwidgets" }
+    Depends { name: "bundle" }
 
     name: "Sniper"
     targetName: mym.app_target
@@ -15,10 +16,9 @@ MyApp {
         "*.h",
         "*.ui",
         "*.qrc",
-        "*.json"
+        "*.json",
+        "Info.plist"
     ]
-
-//    bundle.infoPlistFile: "Info.plist.in"
 
     Group {
         fileTagsFilter: bundle.isBundle ? ["bundle.content"] : ["application"]
@@ -27,13 +27,13 @@ MyApp {
         qbs.installSourceBase: project.buildDirectory + '/' + product.destinationDirectory
     }
 
-//    Group {
-//        name: "Sniper.icns"
-//        condition: qbs.targetOS.contains("osx")
-//        files: [ "Sniper.icns" ]
-//        qbs.install: true
-//        qbs.installDir: mym.install_data_path
-//    }
+    Group {
+        name: "Sniper.icns"
+        condition: qbs.targetOS.contains("osx")
+        files: [ "Sniper.icns" ]
+        qbs.install: true
+        qbs.installDir: mym.install_data_path
+    }
 
     Group {
         name: "sniper.png"

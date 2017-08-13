@@ -48,7 +48,7 @@ void MainWindow::setBidsModel(std::shared_ptr<BidsModel> model)
         return;
 
     _bidsModel = model;
-    ui->bidsView->setModel(model.get());
+    ui->bidsView->setModel(model);
 }
 
 void MainWindow::onDoubleClicked(const QModelIndex &index)

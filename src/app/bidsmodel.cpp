@@ -86,6 +86,14 @@ QVariant BidsModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+void BidsModel::makeBid(const QModelIndex& index)
+{
+    if (!index.isValid())
+        return;
+
+    makeBid(_data.at(size_t(index.row())));
+}
+
 void BidsModel::onInfoLoaded(const AucInfoLoader::Info &info)
 {
     const auto predicate = [&info](const Data &d)
@@ -177,7 +185,7 @@ void BidsModel::processDuration(BidsModel::Data &data)
 
 void BidsModel::makeBid(const BidsModel::Data &data)
 {
-    if (data.bid + data.step >= data.myBid) {
+    if (data.bid + data.step > data.myBid) {
         qCInfo(bidsModel) << "Current bid is higher than you bid, skipping auc"
                           << data.lot;
     } else {

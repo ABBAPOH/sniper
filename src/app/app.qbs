@@ -8,6 +8,8 @@ MyApp {
     Depends { name: "Qt.webkitwidgets" }
     Depends { name: "bundle" }
 
+    cpp.includePaths: base.concat([path])
+
     name: "Sniper"
     targetName: mym.app_target
 

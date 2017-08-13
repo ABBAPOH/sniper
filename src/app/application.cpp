@@ -81,7 +81,7 @@ int Application::exec()
 void Application::makeBid(int auctionId, int bid)
 {
     const auto urls = _config->data()["urls"].toMap();
-    const auto keys = _config->data()["keys"].toMap().value("login").toMap();
+    const auto keys = _config->data()["keys"].toMap().value("makebid").toMap();
 
     QUrlQuery postData;
     postData.addQueryItem(keys["auc_id"].toString(), QString::number(auctionId));

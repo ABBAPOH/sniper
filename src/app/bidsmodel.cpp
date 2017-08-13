@@ -86,6 +86,28 @@ QVariant BidsModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+QVariant BidsModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if (orientation == Qt::Horizontal) {
+        if (role == Qt::DisplayRole) {
+            switch (section) {
+            case Columns::Lot: return tr("Lot");
+            case Columns::Seller: return tr("Seller");
+            case Columns::Shipping: return tr("Shipping");
+            case Columns::Duration: return tr("Duration");
+            case Columns::CurrentBid: return tr("Current bid");
+            case Columns::MyBid: return tr("My bid");
+            case Columns::AucId: return tr("Auc id");
+            case Columns::NextUpdate: return tr("Next update");
+            default:
+                break;
+            }
+        }
+    }
+
+    return QAbstractTableModel::headerData(section, orientation, role);
+}
+
 void BidsModel::makeBid(const QModelIndex& index)
 {
     if (!index.isValid())
@@ -189,7 +211,7 @@ void BidsModel::makeBid(const BidsModel::Data &data)
         qCInfo(bidsModel) << "Current bid is higher than you bid, skipping auc"
                           << data.lot;
     } else {
-        qCInfo(bidsModel) << "Making bid" << data.myBid << "for" << data.lot;
+        qCInfo(bidsModel) << "Making bid" << data.myBid << "for" << data.lot << tr("( id = %1)").arg(data.aucId);
         Application::instance()->makeBid(data.aucId, data.myBid);
     }
 }

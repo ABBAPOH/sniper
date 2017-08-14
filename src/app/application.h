@@ -2,6 +2,7 @@
 
 #include "auctionsmodel.h"
 #include "config.h"
+#include "cookiejar.h"
 #include "bidsmodel.h"
 
 #include <QtWidgets/QApplication>
@@ -46,6 +47,7 @@ private:
 private:
     std::shared_ptr<Config> _config;
     std::shared_ptr<QNetworkAccessManager> _nam;
+    std::shared_ptr<CookieJar> _cookieJar;
     std::shared_ptr<LoginManager> _loginManager;
     std::shared_ptr<AuctionsModel> _auctionsModel;
     std::shared_ptr<BidsModel> _bidsModel;

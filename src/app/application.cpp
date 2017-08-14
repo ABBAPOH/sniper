@@ -29,12 +29,15 @@ Application::Application(int& argc, char** argv, const std::shared_ptr<Config> &
     QApplication(argc, argv),
     _config(config),
     _nam(new QNetworkAccessManager()),
+    _cookieJar(new CookieJar()),
     _loginManager(std::make_shared<LoginManager>(config)),
     _auctionsModel(std::make_shared<AuctionsModel>()),
     _bidsModel(std::make_shared<BidsModel>()),
     _systemTray(new QSystemTrayIcon())
 {
     _instance = this;
+
+    _nam->setCookieJar(_cookieJar.get());
 
     _auctionsModel->setNetworkAccessManager(_nam);
     _bidsModel->infoLoader().setNetworkAccessManager(_nam);
@@ -139,6 +142,7 @@ void Application::showLoginDialog()
 void Application::onLoginChecked(bool logined)
 {
     _progressDialog->hide();
+    _cookieJar->save();
     if (logined) {
         _progressDialog.reset();
 

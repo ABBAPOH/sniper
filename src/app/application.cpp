@@ -10,6 +10,7 @@
 
 #include <QtGui/QIcon>
 
+#include <QtCore/QCommandLineParser>
 #include <QtCore/QUrlQuery>
 
 static std::unique_ptr<QProgressDialog> createProgressDialog()
@@ -70,6 +71,7 @@ Application *Application::instance()
 
 int Application::exec()
 {
+    parseOptions(arguments());
     _progressDialog = createProgressDialog();
 
     QObject::connect(_loginManager.get(), &LoginManager::loginChecked,
@@ -94,8 +96,11 @@ void Application::makeBid(int auctionId, int bid)
     request.setHeader(QNetworkRequest::ContentTypeHeader,
         "application/x-www-form-urlencoded");
 
-    auto reply = _nam->post(request, postData.toString(QUrl::FullyEncoded).toUtf8());
-    connect(reply, &QNetworkReply::finished, this, &Application::onFinished);
+    if (!_options.dryRun) {
+        const auto data = postData.toString(QUrl::FullyEncoded).toUtf8();
+        const auto reply = _nam->post(request, data);
+        connect(reply, &QNetworkReply::finished, this, &Application::onFinished);
+    }
 }
 
 bool Application::event(QEvent *e)
@@ -107,6 +112,23 @@ bool Application::event(QEvent *e)
         }
     }
     return QApplication::event(e);
+}
+
+bool Application::parseOptions(const QStringList& args)
+{
+    QCommandLineParser parser;
+    parser.addHelpOption();
+    auto dryRun = QCommandLineOption("dry-run");
+    parser.addOption(dryRun);
+
+    if (!parser.parse(args))
+        return false;
+
+    if (parser.isSet(dryRun)) {
+        _options.dryRun = true;
+    }
+
+    return true;
 }
 
 void Application::onFinished()

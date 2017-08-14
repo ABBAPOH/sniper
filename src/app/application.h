@@ -38,6 +38,12 @@ protected:
     bool event(QEvent *e);
 
 private:
+    struct Options
+    {
+        bool dryRun {false};
+    };
+
+    bool parseOptions(const QStringList& args);
     void onFinished();
     void onLoginDialogAccepted();
     void showLoginDialog();
@@ -46,6 +52,7 @@ private:
 
 private:
     std::shared_ptr<Config> _config;
+    Options _options;
     std::shared_ptr<QNetworkAccessManager> _nam;
     std::shared_ptr<CookieJar> _cookieJar;
     std::shared_ptr<LoginManager> _loginManager;

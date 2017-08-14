@@ -5,9 +5,13 @@
 #include <QtCore/QDebug>
 #include <QtCore/QTimer>
 
-BidsModel::BidsModel() :
+BidsModel::BidsModel(const std::shared_ptr<Config>& config) :
     _loader(new AucInfoLoader)
 {
+    _maxDuration = QTime::fromString(config->value("delays/max").toString(), "h:m:s");
+    _minDuration = QTime::fromString(config->value("delays/min").toString(), "h:m:s");
+    _expectedValue = config->value("delays/expeted").toDouble();
+    _dispersion = config->value("delays/dispersion").toDouble();
     connect(_loader.get(), &AucInfoLoader::loaded, this, &BidsModel::onInfoLoaded);
 }
 
@@ -168,38 +172,21 @@ void BidsModel::onTimeout()
 
 void BidsModel::processDuration(BidsModel::Data &data)
 {
-    int delay = 0;
-    int msecsInHour = 60 * 60 * 1000;
-    int msecsInMinute = 60 * 1000;
-    int msecsInSecond = 1000;
-    if (data.duration > 12 * msecsInHour)
-        delay = 10 * msecsInHour + qrand() % msecsInHour; // reload in next 10-11 hours
-    else if (data.duration > 6 * msecsInHour)
-        delay = 5 * msecsInHour + qrand() % (msecsInHour / 2); // reload in next 5-5.5 hours
-    else if (data.duration > 2 * msecsInHour)
-        delay = 1 * msecsInHour + qrand() % (msecsInHour / 2); // reload in next 1-1.5 hours
-    else if (data.duration > 1 * msecsInHour)
-        delay = 30 * msecsInMinute + qrand() % (15 * msecsInMinute); // reload in next 30-45 minutes
-    else if (data.duration > 30 * msecsInMinute)
-        delay = 15 * msecsInMinute + qrand() % (10 * msecsInMinute); // reload in next 15-25 minutes
-    else if (data.duration > 15 * msecsInMinute)
-        delay = 10 * msecsInMinute + qrand() % (3 * msecsInMinute); // reload in next 10-13 minutes
-    else if (data.duration > 10 * msecsInMinute)
-        delay = 5 * msecsInMinute + qrand() % (3 * msecsInMinute); // reload in next 5-8 minutes
-    else if (data.duration > 5 * msecsInMinute)
-        delay = 2 * msecsInMinute + qrand() % (1 * msecsInMinute); // reload in next 2-3 minutes
-    else if (data.duration > 2 * msecsInMinute)
-        delay = 60 * msecsInSecond + qrand() % (30 * msecsInSecond); // reload in next 60-90 seconds
-    else if (data.duration > 1 * msecsInMinute)
-        delay = int(data.duration - 15 * msecsInSecond - qrand() % (15 * msecsInSecond)); // reload in 15-30 seconds before end
-    else if (data.duration > 15 * msecsInSecond)
-        delay = int(data.duration - 5 * msecsInSecond - qrand() % (7 * msecsInSecond)); // reload in 5-7 seconds before end
-    else { // less than a 15 seconds
+    qint64 delay = 0;
+
+    const auto maxDuration = _maxDuration.msecsSinceStartOfDay();
+    const auto minDuration = _minDuration.msecsSinceStartOfDay();
+    const auto duration = data.duration < maxDuration ? data.duration : maxDuration;
+    if (duration <= minDuration) {
         makeBid(data);
-        delay = 30 * msecsInSecond;
+        delay = data.duration + 10 * 1000;
+    } else {
+        const auto dispersion = qint64(duration * _dispersion);
+        delay = qint64(duration * _expectedValue)
+                + qint64(qrand()) % dispersion - dispersion / 2;
     }
 
-    data.timer->start(delay);
+    data.timer->start(int(delay));
     data.nextUpdate = QDateTime::currentDateTimeUtc().addMSecs(delay);
 
     qCInfo(bidsModel) << "Next update for auc" << data.lot << "will be at" << data.nextUpdate;

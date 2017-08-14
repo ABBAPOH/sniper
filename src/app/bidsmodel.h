@@ -2,6 +2,7 @@
 
 #include "aucinfoloader.h"
 #include "auctionsmodel.h"
+#include "config.h"
 
 #include <QtCore/QAbstractTableModel>
 #include <QtCore/QLoggingCategory>
@@ -27,7 +28,7 @@ public:
         ColumnCount
     };
 
-    BidsModel();
+    explicit BidsModel(const std::shared_ptr<Config> &config);
 
     AucInfoLoader &infoLoader() { return *_loader.get(); }
     const AucInfoLoader &infoLoader() const { return *_loader.get(); }
@@ -61,6 +62,10 @@ private slots:
     void makeBid(const Data &data);
 
 private:
+    QTime _maxDuration;
+    QTime _minDuration;
+    double _expectedValue;
+    double _dispersion;
     std::vector<Data> _data;
     std::unique_ptr<AucInfoLoader> _loader;
 };

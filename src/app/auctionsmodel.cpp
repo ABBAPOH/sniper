@@ -212,7 +212,8 @@ void AuctionsModel::restartUpdateTimer()
 {
     _updateTimer->stop();
     if (_autoUpdateEnabled) {
-        const auto delay = _autoUpdateInterval + qrand() % _autoUpdateDispersion;
+        const auto dispersion = qrand() % _autoUpdateDispersion - _autoUpdateDispersion / 2;
+        const auto delay = _autoUpdateInterval + dispersion;
         qCInfo(auctionsModel) << "Next update in" << QDateTime::currentDateTimeUtc().addMSecs(delay);
         _updateTimer->start(delay);
     }

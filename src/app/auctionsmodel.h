@@ -84,8 +84,8 @@ private:
     std::unique_ptr<QWebPage> _page;
     std::unique_ptr<QTimer> _updateTimer;
     bool _autoUpdateEnabled {true};
-    int _autoUpdateInterval {10 * 60 * 1000};
-    int _autoUpdateDispersion {5 * 60 * 1000};
+    int _autoUpdateInterval {20 * 60 * 1000};
+    int _autoUpdateDispersion {10 * 60 * 1000};
 };
 
 Q_DECLARE_LOGGING_CATEGORY(auctionsModel);

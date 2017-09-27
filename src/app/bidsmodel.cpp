@@ -10,8 +10,9 @@ BidsModel::BidsModel(const std::shared_ptr<Config>& config) :
 {
     _maxDuration = QTime::fromString(config->value("delays/max").toString(), "h:m:s");
     _minDuration = QTime::fromString(config->value("delays/min").toString(), "h:m:s");
-    _expectedValue = config->value("delays/expeted").toDouble();
+    _expectedValue = config->value("delays/expected").toDouble();
     _dispersion = config->value("delays/dispersion").toDouble();
+
     connect(_loader.get(), &AucInfoLoader::loaded, this, &BidsModel::onInfoLoaded);
 }
 
@@ -184,6 +185,8 @@ void BidsModel::processDuration(BidsModel::Data &data)
         const auto dispersion = qint64(duration * _dispersion);
         delay = qint64(duration * _expectedValue)
                 + qint64(qrand()) % dispersion - dispersion / 2;
+        Q_ASSERT(delay > 0);
+        Q_ASSERT(delay < duration);
     }
 
     data.timer->start(int(delay));

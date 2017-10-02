@@ -2,6 +2,7 @@
 #include "utils.h"
 
 #include <QtCore/QDebug>
+#include <QtCore/QDateTime>
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 
@@ -47,9 +48,10 @@ void LogHandler::messageOutput(QtMsgType type, const QMessageLogContext& context
 {
     qtMessageHandler(type, context, msg);
 
+    auto dateTime = QDateTime::currentDateTime().toString("dd.MM.yyyy hh:mm:ss:zzz");
     const auto message = (context.category == QByteArrayLiteral("default"))
-            ? tr("%1: %2").arg(typeToString(type), -5, ' ').arg(msg)
-            : tr("%1 %2: %3").arg(typeToString(type), -5, ' ').arg(context.category).arg(msg);
+            ? tr("%1 %2: %3").arg(dateTime).arg(typeToString(type), -5, ' ').arg(msg)
+            : tr("%1 %2 %3: %4").arg(dateTime).arg(typeToString(type), -5, ' ').arg(context.category).arg(msg);
     emit _instance->messageAddedPrivate(message);
 }
 

@@ -201,12 +201,13 @@ void BidsModel::processDuration(BidsModel::Data &data)
 
 void BidsModel::makeBid(const BidsModel::Data &data)
 {
-    if (data.bid + data.step > data.myBid) {
+    const auto myBid = data.myBid + 1 + (qrand() % 9); // add random 1-10 roubles
+    if (data.bid + data.step > myBid) {
         qCInfo(bidsModel) << "Current bid is higher than you bid, skipping auc"
                           << data.lot;
     } else {
-        qCInfo(bidsModel) << "Making bid" << data.myBid << "for" << data.lot << tr("( id = %1)").arg(data.aucId);
-        Application::instance()->makeBid(data.aucId, data.myBid);
+        qCInfo(bidsModel) << "Making bid" << myBid << "for" << data.lot << tr("( id = %1)").arg(data.aucId);
+        Application::instance()->makeBid(data.aucId, myBid);
     }
 }
 

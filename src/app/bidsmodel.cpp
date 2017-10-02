@@ -151,6 +151,10 @@ void BidsModel::onInfoLoaded(const AucInfoLoader::Info &info)
     data.step = info.step;
     data.duration = info.duration;
 
+    qCDebug(bidsModel) << "Current bid = " << data.bid;
+    if (data.duration < 60 * 60 * 1000)
+        qCDebug(bidsModel) << "Duration = " << QTime::fromMSecsSinceStartOfDay(int(data.duration));
+
     processDuration(data);
 
     emit dataChanged(begin, end, {Qt::DisplayRole});

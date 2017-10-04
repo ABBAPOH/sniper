@@ -6,7 +6,8 @@
 #include <QtCore/QTimer>
 
 BidsModel::BidsModel(const std::shared_ptr<Config>& config) :
-    _loader(new AucInfoLoader)
+    _loader(new AucInfoLoader),
+    _fastLoader(new FastAucInfoLoader)
 {
     _maxDuration = QTime::fromString(config->value("delays/max").toString(), "h:m:s");
     _minDuration = QTime::fromString(config->value("delays/min").toString(), "h:m:s");
@@ -14,6 +15,7 @@ BidsModel::BidsModel(const std::shared_ptr<Config>& config) :
     _dispersion = config->value("delays/dispersion").toDouble();
 
     connect(_loader.get(), &AucInfoLoader::loaded, this, &BidsModel::onInfoLoaded);
+    connect(_fastLoader.get(), &FastAucInfoLoader::loaded, this, &BidsModel::onInfoLoaded);
 }
 
 void BidsModel::addBid(const AuctionsModel::Data &data, int bid)
@@ -125,11 +127,13 @@ void BidsModel::onInfoLoaded(const AucInfoLoader::Info &info)
 {
     const auto predicate = [&info](const Data &d)
     {
-        return info.url == d.url;
+        return (!info.url.isEmpty() && info.url == d.url)
+                || (d.aucId && info.aucId == d.aucId);
     };
     const auto it = std::find_if(_data.begin(), _data.end(), predicate);
     if (it == _data.end()) {
-        qCCritical(bidsModel) << "Can't find auc with url" << info.url;
+        qCCritical(bidsModel) << "Can't find auc with url" << info.url
+                              << "or" << info.aucId;
         return;
     }
 
@@ -172,7 +176,7 @@ void BidsModel::onTimeout()
     const auto &data = _data.at(size_t(id));
 
     qCInfo(bidsModel) << "Timeout for auc" << data.lot;
-    _loader->load(data.url);
+    _fastLoader->load(data.aucId);
 }
 
 void BidsModel::processDuration(BidsModel::Data &data)

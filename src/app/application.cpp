@@ -42,6 +42,7 @@ Application::Application(int& argc, char** argv, const std::shared_ptr<Config> &
 
     _auctionsModel->setNetworkAccessManager(_nam);
     _bidsModel->infoLoader().setNetworkAccessManager(_nam);
+    _bidsModel->fastInfoLoader().setNetworkAccessManager(_nam);
     _loginManager->setNetworkAccessManager(_nam);
 
     _systemTray->setIcon(QIcon(":/sniper.png"));

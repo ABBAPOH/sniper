@@ -59,9 +59,9 @@ private:
     };
 
 private slots:
-    void onInfoLoaded(const QUrl &url, const AucInfoLoader::Info &info);
-    void onFastInfoLoaded(int aucId, const AucInfoLoader::Info &info);
-    void updateInfo(const std::vector<Data>::iterator &it, const AucInfoLoader::Info &info);
+    void onInfoLoaded(const QUrl &url, const AucInfoLoader::AucInfo &info);
+    void onFastInfoLoaded(int aucId, const Utils::AucInfo &info);
+    void updateInfo(const std::vector<Data>::iterator &it, const AucInfoLoader::AucInfo &info);
     void onTimeout();
     void processDuration(Data &data);
     void makeBid(const Data &data);

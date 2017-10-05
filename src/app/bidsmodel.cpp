@@ -123,7 +123,7 @@ void BidsModel::makeBid(const QModelIndex& index)
     makeBid(_data.at(size_t(index.row())));
 }
 
-void BidsModel::onInfoLoaded(const QUrl& url, const AucInfoLoader::Info &info)
+void BidsModel::onInfoLoaded(const QUrl& url, const AucInfoLoader::AucInfo &info)
 {
     const auto predicate = [&info, url](const Data &d)
     {
@@ -138,7 +138,7 @@ void BidsModel::onInfoLoaded(const QUrl& url, const AucInfoLoader::Info &info)
     updateInfo(it, info);
 }
 
-void BidsModel::onFastInfoLoaded(int aucId, const AucInfoLoader::Info& info)
+void BidsModel::onFastInfoLoaded(int aucId, const Utils::AucInfo& info)
 {
     const auto predicate = [&aucId](const Data &d)
     {
@@ -153,7 +153,7 @@ void BidsModel::onFastInfoLoaded(int aucId, const AucInfoLoader::Info& info)
     updateInfo(it, info);
 }
 
-void BidsModel::updateInfo(const std::vector<Data>::iterator& it, const AucInfoLoader::Info &info)
+void BidsModel::updateInfo(const std::vector<Data>::iterator& it, const Utils::AucInfo &info)
 {
     auto &data = *it;
     const auto begin = index(int(it - _data.begin()), 0);

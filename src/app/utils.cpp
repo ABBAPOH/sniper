@@ -1,8 +1,10 @@
 #include "utils.h"
 
+#include <QtWebKitWidgets/QWebFrame>
+#include <QtWebKit/QWebElement>
 #include <QtCore/QStandardPaths>
-#include <QRegularExpression>
-#include <QTime>
+#include <QtCore/QRegularExpression>
+#include <QtCore/QTime>
 
 namespace Utils {
 
@@ -44,6 +46,44 @@ QString configPath()
 {
     return QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
             + "/config.json";
+}
+
+bool parseAucInfo(const QWebFrame* frame, AucInfo& info)
+{
+    auto body = frame->findFirstElement("body");
+
+    if (body.isNull()) {
+        qWarning() << "Can't find <body> element in frame" << frame->baseUrl();
+        return false;
+    }
+
+    const char *constLines[] = {
+        "Текущая ставка, рубли: ",
+        "Шаг: ",
+        "До окончания аукциона: ",
+        "Аукцион завершен."
+    };
+
+    auto lines = body.toPlainText().split("\n", QString::SkipEmptyParts);
+    for (const auto &line : lines) {
+        if (line.contains(constLines[3])) {
+            info.ended = true;
+            info.duration = -1;
+            info.step = -1;
+            info.bid = -1;
+            break;
+        }
+        if (line.startsWith(constLines[0])) {
+            const auto subLine = line.mid(QString(constLines[0]).length());
+            info.bid = subLine.split(" ").at(0).toInt();
+        } else if (line.startsWith(constLines[1])) {
+            info.step = line.mid(QString(constLines[1]).length()).toInt();
+        } else if (line.startsWith(constLines[2])) {
+            info.duration = Utils::parseDuration(line.mid(QString(constLines[2]).length()));
+        }
+    }
+
+    return true;
 }
 
 } // namespace Utils

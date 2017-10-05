@@ -1,5 +1,7 @@
 #pragma once
 
+#include "utils.h"
+
 #include <QtWebKitWidgets/QWebPage>
 
 #include <QtNetwork/QNetworkAccessManager>
@@ -15,14 +17,7 @@ class AucInfoLoader : public QObject
 {
     Q_OBJECT
 public:
-    struct Info
-    {
-        bool ended {false};
-        int bid {0};
-        int step {0};
-        int aucId {0};
-        qint64 duration {0};
-    };
+    using AucInfo = Utils::AucInfo;
 
     explicit AucInfoLoader(QObject *parent = nullptr);
     ~AucInfoLoader();
@@ -34,7 +29,7 @@ public slots:
     void load(const QUrl &url);
 
 signals:
-    void loaded(const QUrl &url, const Info &info);
+    void loaded(const QUrl &url, const AucInfo &info);
 
 private:
     enum class Status { Idle, Adding };

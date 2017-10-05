@@ -70,35 +70,13 @@ void FastAucInfoLoader::onLoadFinished(bool ok)
         return;
     }
 
-    Info info;
+    AucInfo info;
     info.aucId = QUrlQuery(frameUrl).queryItemValue("id").toInt();
 
-    auto body = frame->findFirstElement("body");
-
-    const char *constLines[] = {
-        "Текущая ставка, рубли: ",
-        "Шаг: ",
-        "До окончания аукциона: ",
-        "Аукцион завершен."
-    };
-
-    auto lines = body.toPlainText().split("\n", QString::SkipEmptyParts);
-    for (const auto &line : lines) {
-        if (line.contains(constLines[3])) {
-            info.ended = true;
-            info.duration = -1;
-            info.step = -1;
-            info.bid = -1;
-            break;
-        }
-        if (line.startsWith(constLines[0])) {
-            const auto subLine = line.mid(QString(constLines[0]).length());
-            info.bid = subLine.split(" ").at(0).toInt();
-        } else if (line.startsWith(constLines[1])) {
-            info.step = line.mid(QString(constLines[1]).length()).toInt();
-        } else if (line.startsWith(constLines[2])) {
-            info.duration = Utils::parseDuration(line.mid(QString(constLines[2]).length()));
-        }
+    if (!Utils::parseAucInfo(frame, info)) {
+         qCWarning(fastAucInfoLoader) << "Failed to parse auc info";
+         _status = Status::Idle;
+         return processNextUrl();
     }
 
     emit loaded(info.aucId, info);

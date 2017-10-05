@@ -1,12 +1,13 @@
 #pragma once
 
 #include "aucinfoloader.h"
+#include "utils.h"
 
 class FastAucInfoLoader : public QObject
 {
     Q_OBJECT
 public:
-    using Info = AucInfoLoader::Info;
+    using AucInfo = Utils::AucInfo;
 
     explicit FastAucInfoLoader(QObject *parent = nullptr);
     ~FastAucInfoLoader();
@@ -18,7 +19,7 @@ public slots:
     void load(int auc_id);
 
 signals:
-    void loaded(int auc_id, const Info &info);
+    void loaded(int auc_id, const AucInfo &info);
 
 private:
     enum class Status { Idle, Adding };

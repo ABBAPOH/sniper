@@ -40,13 +40,14 @@ void FastAucInfoLoader::load(int auc_id)
     qCInfo(fastAucInfoLoader) << "Request to load" << url;
 
     _queue.push_back(url);
-    processNextUrl();
+    if (_status == Status::Idle)
+        processNextUrl();
 }
 
 void FastAucInfoLoader::processNextUrl()
 {
-    if (_status != Status::Idle)
-        return;
+    _status = Status::Idle;
+
     if (_queue.empty())
         return;
 
@@ -65,9 +66,7 @@ void FastAucInfoLoader::onLoadFinished(bool ok)
 
     if (!ok) {
         qCWarning(fastAucInfoLoader) << "Failed to load frame" << frameUrl;
-        _status = Status::Idle;
-        processNextUrl();
-        return;
+        return processNextUrl();
     }
 
     AucInfo info;
@@ -75,14 +74,12 @@ void FastAucInfoLoader::onLoadFinished(bool ok)
 
     if (!Utils::parseAucInfo(frame, info)) {
          qCWarning(fastAucInfoLoader) << "Failed to parse auc info";
-         _status = Status::Idle;
          return processNextUrl();
     }
 
     emit loaded(info.aucId, info);
 
-    _status = Status::Idle;
-    processNextUrl();
+    return processNextUrl();
 }
 
 

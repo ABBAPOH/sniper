@@ -5,6 +5,7 @@
 #include <QtCore/QStandardPaths>
 #include <QtCore/QRegularExpression>
 #include <QtCore/QTime>
+#include <QtCore/QUrlQuery>
 
 namespace Utils {
 
@@ -50,10 +51,19 @@ QString configPath()
 
 bool parseAucInfo(const QWebFrame* frame, AucInfo& info)
 {
+    const auto url = frame->baseUrl();
+    const auto query = QUrlQuery(url);
+
+    if (!query.hasQueryItem("id")) {
+        qWarning() << "Frame url" << url << "doesn't have id query item";
+        return false;
+    }
+    info.aucId = query.queryItemValue("id").toInt();
+
     auto body = frame->findFirstElement("body");
 
     if (body.isNull()) {
-        qWarning() << "Can't find <body> element in frame" << frame->baseUrl();
+        qWarning() << "Can't find <body> element in frame" << url;
         return false;
     }
 

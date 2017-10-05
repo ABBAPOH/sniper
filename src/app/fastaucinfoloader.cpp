@@ -70,8 +70,6 @@ void FastAucInfoLoader::onLoadFinished(bool ok)
     }
 
     AucInfo info;
-    info.aucId = QUrlQuery(frameUrl).queryItemValue("id").toInt();
-
     if (!Utils::parseAucInfo(frame, info)) {
          qCWarning(fastAucInfoLoader) << "Failed to parse auc info";
          return processNextUrl();

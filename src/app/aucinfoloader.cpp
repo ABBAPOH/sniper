@@ -4,8 +4,6 @@
 #include <QtWebKit/QWebElement>
 #include <QtWebKitWidgets/QWebFrame>
 
-#include <QtCore/QUrlQuery>
-
 AucInfoLoader::AucInfoLoader(QObject *parent) :
     QObject(parent),
     _page(new QWebPage)
@@ -82,8 +80,6 @@ void AucInfoLoader::onFrameLoadFinished(bool ok)
         const auto url = _page->mainFrame()->url();
 
         AucInfo info;
-        info.aucId = QUrlQuery(frameUrl).queryItemValue("id").toInt();
-
         if (!Utils::parseAucInfo(frame, info)) {
              qCWarning(aucInfoLoader) << "Failed to parse auc info";
              _status = Status::Idle;

@@ -15,7 +15,7 @@ BidsModel::BidsModel(const std::shared_ptr<Config>& config) :
     _dispersion = config->value("delays/dispersion").toDouble();
 
     connect(_loader.get(), &AucInfoLoader::loaded, this, &BidsModel::onInfoLoaded);
-    connect(_fastLoader.get(), &FastAucInfoLoader::loaded, this, &BidsModel::onInfoLoaded);
+    connect(_fastLoader.get(), &FastAucInfoLoader::loaded, this, &BidsModel::onFastInfoLoaded);
 }
 
 void BidsModel::addBid(const AuctionsModel::Data &data, int bid)
@@ -123,20 +123,38 @@ void BidsModel::makeBid(const QModelIndex& index)
     makeBid(_data.at(size_t(index.row())));
 }
 
-void BidsModel::onInfoLoaded(const AucInfoLoader::Info &info)
+void BidsModel::onInfoLoaded(const QUrl& url, const AucInfoLoader::Info &info)
 {
-    const auto predicate = [&info](const Data &d)
+    const auto predicate = [&info, url](const Data &d)
     {
-        return (!info.url.isEmpty() && info.url == d.url)
-                || (d.aucId && info.aucId == d.aucId);
+        return !url.isEmpty() && url == d.url;
     };
     const auto it = std::find_if(_data.begin(), _data.end(), predicate);
     if (it == _data.end()) {
-        qCCritical(bidsModel) << "Can't find auc with url" << info.url
-                              << "or" << info.aucId;
+        qCCritical(bidsModel) << "Can't find auc with url" << url;
         return;
     }
 
+    updateInfo(it, info);
+}
+
+void BidsModel::onFastInfoLoaded(int aucId, const AucInfoLoader::Info& info)
+{
+    const auto predicate = [&aucId](const Data &d)
+    {
+        return aucId == d.aucId;
+    };
+    const auto it = std::find_if(_data.begin(), _data.end(), predicate);
+    if (it == _data.end()) {
+        qCCritical(bidsModel) << "Can't find auc with auc_id" << info.aucId;
+        return;
+    }
+
+    updateInfo(it, info);
+}
+
+void BidsModel::updateInfo(const std::vector<Data>::iterator& it, const AucInfoLoader::Info &info)
+{
     auto &data = *it;
     const auto begin = index(int(it - _data.begin()), 0);
     const auto end = index(int(it - _data.begin()), Columns::ColumnCount);

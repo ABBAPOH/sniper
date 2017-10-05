@@ -101,7 +101,7 @@ void FastAucInfoLoader::onLoadFinished(bool ok)
         }
     }
 
-    emit loaded(info);
+    emit loaded(info.aucId, info);
 
     _status = Status::Idle;
     processNextUrl();

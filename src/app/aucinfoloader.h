@@ -17,7 +17,6 @@ class AucInfoLoader : public QObject
 public:
     struct Info
     {
-        QUrl url;
         bool ended {false};
         int bid {0};
         int step {0};
@@ -35,7 +34,7 @@ public slots:
     void load(const QUrl &url);
 
 signals:
-    void loaded(const Info &info);
+    void loaded(const QUrl &url, const Info &info);
 
 private:
     enum class Status { Idle, Adding };

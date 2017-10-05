@@ -79,8 +79,9 @@ void AucInfoLoader::onFrameLoadFinished(bool ok)
     qCDebug(aucInfoLoader) << "Loaded frame" << frameUrl;
 
     if (frameUrl.path() == "/auc/auc.php") {
+        const auto url = _page->mainFrame()->url();
+
         Info info;
-        info.url = _page->mainFrame()->url();
         info.aucId = QUrlQuery(frameUrl).queryItemValue("id").toInt();
 
         auto body = frame->findFirstElement("body");
@@ -111,7 +112,7 @@ void AucInfoLoader::onFrameLoadFinished(bool ok)
             }
         }
 
-        emit loaded(info);
+        emit loaded(url, info);
     }
 
     auto frames = _page->findChildren<QWebFrame *>();

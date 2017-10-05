@@ -18,7 +18,7 @@ public slots:
     void load(int auc_id);
 
 signals:
-    void loaded(const Info &info);
+    void loaded(int auc_id, const Info &info);
 
 private:
     enum class Status { Idle, Adding };

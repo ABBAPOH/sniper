@@ -11,12 +11,14 @@
 AuctionsModel::AuctionsModel(QObject* parent) :
     QAbstractTableModel(parent),
     _page(new QWebPage),
-    _updateTimer(new QTimer)
+    _updateTimer(new QTimer),
+    _updateDurationTimer(new QTimer)
 {
     _updateTimer->setSingleShot(true);
     connect(_updateTimer.get(), &QTimer::timeout, this, &AuctionsModel::onUdpateTimeout);
     connect(_page.get(), &QWebPage::loadFinished, this, &AuctionsModel::loadFinished);
 
+    initUpdateDurationTimer();
     restartUpdateTimer();
 }
 
@@ -208,6 +210,16 @@ void AuctionsModel::onUdpateTimeout()
     restartUpdateTimer();
 }
 
+void AuctionsModel::onUdpateDurationTimeout()
+{
+    if (!rowCount())
+        return;
+
+    const auto top = index(0, Columns::Duration);
+    const auto bottom = index(rowCount() - 1, Columns::Duration);
+    emit dataChanged(top, bottom);
+}
+
 void AuctionsModel::restartUpdateTimer()
 {
     _updateTimer->stop();
@@ -217,6 +229,13 @@ void AuctionsModel::restartUpdateTimer()
         qCInfo(auctionsModel) << "Next update in" << QDateTime::currentDateTimeUtc().addMSecs(delay);
         _updateTimer->start(delay);
     }
+}
+
+void AuctionsModel::initUpdateDurationTimer()
+{
+    connect(_updateDurationTimer.get(), &QTimer::timeout,
+            this, &AuctionsModel::onUdpateDurationTimeout);
+    _updateDurationTimer->start(1000);
 }
 
 Q_LOGGING_CATEGORY(auctionsModel, "sniper.auctionsModel");

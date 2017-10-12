@@ -57,8 +57,8 @@ public:
 
     // QAbstractItemModel interface
 public:
-    int rowCount(const QModelIndex& parent) const override;
-    int columnCount(const QModelIndex& parent) const override;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
     QVariant data(const QModelIndex& index, int role) const override;
 
@@ -74,15 +74,18 @@ signals:
 private slots:
     void loadFinished();
     void onUdpateTimeout();
+    void onUdpateDurationTimeout();
 
 private:
     void restartUpdateTimer();
+    void initUpdateDurationTimer();
 
 private:
     std::deque<Data> _data;
     std::shared_ptr<QNetworkAccessManager> _manager;
     std::unique_ptr<QWebPage> _page;
     std::unique_ptr<QTimer> _updateTimer;
+    std::unique_ptr<QTimer> _updateDurationTimer;
     bool _autoUpdateEnabled {true};
     int _autoUpdateInterval {20 * 60 * 1000};
     int _autoUpdateDispersion {10 * 60 * 1000};

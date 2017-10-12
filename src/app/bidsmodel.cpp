@@ -159,15 +159,18 @@ void BidsModel::onFastInfoLoaded(int aucId, const Utils::AucInfo& info)
 void BidsModel::updateInfo(const std::vector<Data>::iterator& it, const Utils::AucInfo &info)
 {
     auto &data = *it;
-    const auto begin = index(int(it - _data.begin()), 0);
-    const auto end = index(int(it - _data.begin()), Columns::ColumnCount);
+    const auto row = int(it - _data.begin());
+    const auto begin = index(row, 0);
+    const auto end = index(row, Columns::ColumnCount - 1);
 
     qCDebug(bidsModel) << "Update data for auc" << data.lot;
 
     if (info.ended) {
-        beginRemoveRows(QModelIndex(), begin.row(), end.row());
+        qCDebug(bidsModel) << "rowCount before = " << rowCount();
+        beginRemoveRows(QModelIndex(), row, row);
         _data.erase(it);
         endRemoveRows();
+        qCDebug(bidsModel) << "rowCount after = " << rowCount();
         return;
     }
 

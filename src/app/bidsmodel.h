@@ -68,6 +68,7 @@ private slots:
     void onUdpateDurationTimeout();
 
 private:
+    std::vector<Data>::iterator findAuc(const QUrl& url);
     void initUpdateDurationTimer();
 
 private:

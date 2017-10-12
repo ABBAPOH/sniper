@@ -33,7 +33,7 @@ void BidsModel::addBid(const AuctionsModel::Data &data, int bid)
 
     d.timer = std::make_shared<QTimer>();
     d.timer->setSingleShot(true);
-    d.timer->setProperty("id", newRow);
+    d.timer->setProperty("id", d.url);
     connect(d.timer.get(), &QTimer::timeout, this, &BidsModel::onTimeout);
 
     _loader->load(d.url);
@@ -128,17 +128,7 @@ void BidsModel::makeBid(const QModelIndex& index)
 
 void BidsModel::onInfoLoaded(const QUrl& url, const AucInfoLoader::AucInfo &info)
 {
-    const auto predicate = [&info, url](const Data &d)
-    {
-        return !url.isEmpty() && url == d.url;
-    };
-    const auto it = std::find_if(_data.begin(), _data.end(), predicate);
-    if (it == _data.end()) {
-        qCCritical(bidsModel) << "Can't find auc with url" << url;
-        return;
-    }
-
-    updateInfo(it, info);
+    updateInfo(findAuc(url), info);
 }
 
 void BidsModel::onFastInfoLoaded(int aucId, const Utils::AucInfo& info)
@@ -158,6 +148,11 @@ void BidsModel::onFastInfoLoaded(int aucId, const Utils::AucInfo& info)
 
 void BidsModel::updateInfo(const std::vector<Data>::iterator& it, const Utils::AucInfo &info)
 {
+    if (it == _data.end()) {
+        qCCritical(bidsModel) << "updateInfo called with invalid iterator";
+        return;
+    }
+
     auto &data = *it;
     const auto row = int(it - _data.begin());
     const auto begin = index(row, 0);
@@ -197,11 +192,14 @@ void BidsModel::onTimeout()
         return;
     }
 
-    auto id = timer->property("id").toInt();
-    const auto &data = _data.at(size_t(id));
+    auto url = timer->property("id").toUrl();
+    const auto it = findAuc(url);
+    if (it != _data.end()) {
+        const auto &data = *it;
 
-    qCInfo(bidsModel) << "Timeout for auc" << data.lot;
-    _fastLoader->load(data.aucId);
+        qCInfo(bidsModel) << "Timeout for auc" << data.lot;
+        _fastLoader->load(data.aucId);
+    }
 }
 
 void BidsModel::processDuration(BidsModel::Data &data)
@@ -248,6 +246,19 @@ void BidsModel::onUdpateDurationTimeout()
     const auto top = index(0, Columns::Duration);
     const auto bottom = index(rowCount() - 1, Columns::Duration);
     emit dataChanged(top, bottom);
+}
+
+std::vector<BidsModel::Data>::iterator BidsModel::findAuc(const QUrl& url)
+{
+    const auto predicate = [url](const Data &d)
+    {
+        return !url.isEmpty() && url == d.url;
+    };
+    const auto it = std::find_if(_data.begin(), _data.end(), predicate);
+    if (it == _data.end())
+        qCCritical(bidsModel) << "Can't find auc with url" << url;
+
+    return it;
 }
 
 void BidsModel::initUpdateDurationTimer()

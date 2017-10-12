@@ -7,7 +7,8 @@
 
 BidsModel::BidsModel(const std::shared_ptr<Config>& config) :
     _loader(new AucInfoLoader),
-    _fastLoader(new FastAucInfoLoader)
+    _fastLoader(new FastAucInfoLoader),
+    _updateDurationTimer(new QTimer)
 {
     _maxDuration = QTime::fromString(config->value("delays/max").toString(), "h:m:s");
     _minDuration = QTime::fromString(config->value("delays/min").toString(), "h:m:s");
@@ -16,6 +17,8 @@ BidsModel::BidsModel(const std::shared_ptr<Config>& config) :
 
     connect(_loader.get(), &AucInfoLoader::loaded, this, &BidsModel::onInfoLoaded);
     connect(_fastLoader.get(), &FastAucInfoLoader::loaded, this, &BidsModel::onFastInfoLoaded);
+
+    initUpdateDurationTimer();
 }
 
 void BidsModel::addBid(const AuctionsModel::Data &data, int bid)
@@ -78,7 +81,7 @@ QVariant BidsModel::data(const QModelIndex &index, int role) const
         } else if (column == Shipping) {
             return data.shipping;
         } else if (column == Duration) {
-            return Utils::durationToString(data.duration);
+            return Utils::getAucDuration(QDateTime::currentDateTime(), data.end);
         } else if (column == CurrentBid) {
             return data.bid;
         } else if (column == MyBid) {
@@ -172,6 +175,7 @@ void BidsModel::updateInfo(const std::vector<Data>::iterator& it, const Utils::A
     data.bid = info.bid;
     data.step = info.step;
     data.duration = info.duration;
+    data.end = QDateTime::currentDateTime().addMSecs(data.duration);
 
     qCDebug(bidsModel) << "Current bid = " << data.bid;
     if (data.duration < 60 * 60 * 1000)
@@ -231,6 +235,23 @@ void BidsModel::makeBid(const BidsModel::Data &data)
         qCInfo(bidsModel) << "Making bid" << myBid << "for" << data.lot << tr("( id = %1)").arg(data.aucId);
         Application::instance()->makeBid(data.aucId, myBid);
     }
+}
+
+void BidsModel::onUdpateDurationTimeout()
+{
+    if (!rowCount())
+        return;
+
+    const auto top = index(0, Columns::Duration);
+    const auto bottom = index(rowCount() - 1, Columns::Duration);
+    emit dataChanged(top, bottom);
+}
+
+void BidsModel::initUpdateDurationTimer()
+{
+    connect(_updateDurationTimer.get(), &QTimer::timeout,
+            this, &BidsModel::onUdpateDurationTimeout);
+    _updateDurationTimer->start(1000);
 }
 
 Q_LOGGING_CATEGORY(bidsModel, "sniper.bidsModel");

@@ -65,6 +65,10 @@ private slots:
     void onTimeout();
     void processDuration(Data &data);
     void makeBid(const Data &data);
+    void onUdpateDurationTimeout();
+
+private:
+    void initUpdateDurationTimer();
 
 private:
     QTime _maxDuration;
@@ -74,6 +78,7 @@ private:
     std::vector<Data> _data;
     std::unique_ptr<AucInfoLoader> _loader;
     std::unique_ptr<FastAucInfoLoader> _fastLoader;
+    std::unique_ptr<QTimer> _updateDurationTimer;
 };
 
 Q_DECLARE_LOGGING_CATEGORY(bidsModel);

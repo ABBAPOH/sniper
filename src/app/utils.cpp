@@ -102,5 +102,11 @@ bool parseAucInfo(const QWebFrame* frame, AucInfo& info)
     return true;
 }
 
+QString getAucDuration(const QDateTime& current, const QDateTime& end)
+{
+    const auto msecs = current.msecsTo(end);
+    return durationToString(msecs);
+}
+
 } // namespace Utils
 

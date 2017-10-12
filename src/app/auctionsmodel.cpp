@@ -127,12 +127,6 @@ QVariant AuctionsModel::headerData(int section, Qt::Orientation orientation, int
     return QVariant();
 }
 
-QString getAucDuration(const QDateTime &current, const QDateTime &end)
-{
-    const auto msecs = current.msecsTo(end);
-    return Utils::durationToString(msecs);
-}
-
 QVariant AuctionsModel::data(const QModelIndex& index, int role) const
 {
     if (!index.isValid())
@@ -149,7 +143,7 @@ QVariant AuctionsModel::data(const QModelIndex& index, int role) const
         } else if (column == Shipping) {
             return data.shipping;
         } else if (column == Duration) {
-            return getAucDuration(currentDateTime, data.end);
+            return Utils::getAucDuration(currentDateTime, data.end);
         } else if (column == Bid) {
             return data.bid;
         }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QtCore/QDateTime>
 #include <QtCore/QString>
 
 class QWebFrame;
@@ -17,6 +18,8 @@ struct AucInfo
 
 qint64 parseDuration(const QString &duration);
 QString durationToString(qint64 msecs);
+
+QString getAucDuration(const QDateTime &current, const QDateTime &end);
 
 bool parseAucInfo(const QWebFrame* frame, AucInfo &result);
 

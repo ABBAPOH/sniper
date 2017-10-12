@@ -57,6 +57,8 @@ QString configPath()
 
 bool parseAucInfo(const QWebFrame* frame, AucInfo& info)
 {
+    info = AucInfo();
+
     const auto url = frame->baseUrl();
     const auto query = QUrlQuery(url);
 
@@ -73,30 +75,90 @@ bool parseAucInfo(const QWebFrame* frame, AucInfo& info)
         return false;
     }
 
-    const char *constLines[] = {
-        "Текущая ставка, рубли: ",
-        "Шаг: ",
-        "До окончания аукциона: ",
-        "Аукцион завершен."
+    using Parser = std::function<QVariant(QString)>;
+    const auto parseInt = [](const QString &text) -> QVariant
+    {
+        return text.toInt();
+    };
+    const auto parseTime = [](const QString &text) -> QVariant
+    {
+        return parseDuration(text);
     };
 
-    auto lines = body.toPlainText().split("\n", QString::SkipEmptyParts);
-    for (const auto &line : lines) {
-        if (line.contains(constLines[3])) {
-            info.ended = true;
-            info.duration = -1;
-            info.step = -1;
-            info.bid = -1;
-            break;
+    std::map<QString, Parser> parsers = {
+        {"%int%", parseInt},
+        {"%time%", parseTime}
+    };
+
+    std::map<QString, QString> templates = {
+        { "bid", "Текущая ставка, рубли: %int%" },
+        { "bids_count", "Всего ставок: %int%" },
+        { "step", "Шаг: %int%" },
+        { "duration", "До окончания аукциона: %time%" },
+        { "ended", "Завершен" },
+    };
+
+    const auto split = [](const QString &text) -> std::pair<QString, QString> {
+        const auto kv = text.split(':');
+        if (kv.size() == 2) {
+            return {kv[0].trimmed(), kv.at(1).trimmed()};
+        } else if (kv.size() == 1) {
+            return {kv.at(0), QString()};
         }
-        if (line.startsWith(constLines[0])) {
-            const auto subLine = line.mid(QString(constLines[0]).length());
-            info.bid = subLine.split(" ").at(0).toInt();
-        } else if (line.startsWith(constLines[1])) {
-            info.step = line.mid(QString(constLines[1]).length()).toInt();
-        } else if (line.startsWith(constLines[2])) {
-            info.duration = Utils::parseDuration(line.mid(QString(constLines[2]).length()));
+        qWarning() << "Line" << text << "has too many parts";
+        return {};
+    };
+
+    std::map<QString, std::pair<QString, QString>> parsedTemplates;
+    for (const auto &item: templates) {
+        const auto key = item.first;
+        const auto line = item.second;
+        parsedTemplates.insert({key, split(line)});
+    }
+
+    const auto plainBody = body.toPlainText();
+    std::map<QString, QString> map1;
+    for (const auto &line: plainBody.split('\n', QString::SkipEmptyParts)) {
+        map1.insert(split(line));
+    }
+
+    const auto it = map1.find(parsedTemplates.at("ended").first);
+    if (it != map1.end()) {
+        info.ended = true;
+        return true;
+    }
+
+    std::map<QString, QVariant> parsedValues;
+
+    for (const auto &item: parsedTemplates) {
+        const auto &key = item.first;
+        const auto &value = item.second.first;
+        const auto &type = item.second.second;
+        const auto it = map1.find(value);
+        if (key == "ended")
+            continue;
+        if (it == map1.end()) {
+            qWarning() << "Can't find line" << key;
+            return false;
         }
+        const auto it2 = parsers.find(type);
+        if (it2 == parsers.end()) {
+            qWarning() << "Can't find parser for" << type;
+            return false;
+        }
+        const auto &parser = it2->second;
+        const auto realValue = parser(it->second);
+        parsedValues.insert({key, realValue});
+    }
+
+    try {
+        info.ended = false;
+        info.bid = parsedValues.at("bid").toInt();
+        info.step = parsedValues.at("step").toInt();
+        info.duration = parsedValues.at("duration").toLongLong();
+    } catch (const std::out_of_range &ex) {
+        qCritical() << "Can't find required key in" << plainBody;
+        return false;
     }
 
     return true;

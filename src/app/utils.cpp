@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "application.h"
 
 #include <QtWebKitWidgets/QWebFrame>
 #include <QtWebKit/QWebElement>
@@ -34,7 +35,12 @@ QString durationToString(qint64 msecs)
     const auto hours = int((msecs / 1000 / 60 / 60) - days * 24);
     const auto minutes = int((msecs / 1000 / 60) - (days * 24 + hours) * 60);
     const auto secs = int((msecs / 1000) - ((days * 24 + hours) * 60 + minutes) * 60);
-    return QStringLiteral("%1:%2").arg(days).arg(QTime(hours, minutes, secs).toString("hh:mm:ss"));
+    if (days > 0)
+        return Application::tr("%1 d %2 h").arg(days).arg(hours + 1);
+    else if (hours > 0)
+        return Application::tr("%1 h %2 m").arg(hours).arg(minutes + 1);
+    else
+        return Application::tr("%1 m %2 s").arg(minutes).arg(secs + 1);
 }
 
 QString logPath()

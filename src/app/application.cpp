@@ -122,10 +122,12 @@ bool Application::parseOptions(const QStringList& args)
     auto dryRun = QCommandLineOption("dry-run");
     parser.addOption(dryRun);
 
+
     if (!parser.parse(args))
         return false;
 
     if (parser.isSet(dryRun)) {
+        qDebug() << "Dry run mode is ON";
         _options.dryRun = true;
     }
 

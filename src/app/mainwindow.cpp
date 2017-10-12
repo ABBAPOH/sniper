@@ -35,6 +35,7 @@ void MainWindow::setAuctionsModel(std::shared_ptr<AuctionsModel> model)
 
     _auctionsModel = model;
     ui->auctionsView->setModel(model.get());
+    ui->auctionsView->header()->resizeSection(0, 250);
 
     if (model) {
         connect(ui->actionUpdateAuctions, &QAction::triggered,
@@ -49,6 +50,7 @@ void MainWindow::setBidsModel(std::shared_ptr<BidsModel> model)
 
     _bidsModel = model;
     ui->bidsView->setModel(model);
+    ui->bidsView->header()->resizeSection(0, 250);
 }
 
 void MainWindow::onDoubleClicked(const QModelIndex &index)

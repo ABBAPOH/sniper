@@ -31,6 +31,7 @@ private slots:
 
 private:
     Utils _utils;
+    QString _urlTemplate;
     std::shared_ptr<QNetworkAccessManager> _manager;
     std::unique_ptr<QWebPage> _page;
     Status _status = Status::Idle;

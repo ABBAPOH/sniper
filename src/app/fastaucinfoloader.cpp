@@ -12,6 +12,7 @@ FastAucInfoLoader::FastAucInfoLoader(const std::shared_ptr<Config>& config, QObj
     _utils(config),
     _page(new QWebPage)
 {
+    _urlTemplate = config->value("urls/aucTemplate").toString();
     connect(_page.get(), &QWebPage::loadFinished, this, &FastAucInfoLoader::onLoadFinished);
 }
 
@@ -37,7 +38,7 @@ void FastAucInfoLoader::setNetworkAccessManager(const std::shared_ptr<QNetworkAc
 
 void FastAucInfoLoader::load(int auc_id)
 {
-    QUrl url(QString("http://topdeck.ru/auc/auc.php?id=%1").arg(auc_id));
+    QUrl url(_urlTemplate.arg(auc_id));
     qCInfo(fastAucInfoLoader) << "Request to load" << url;
 
     _queue.push_back(url);

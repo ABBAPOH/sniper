@@ -2,7 +2,8 @@
     "urls" : {
         "makebid" : "http://topdeck.ru/auc/makebid.php",
         "index.php" : "http://topdeck.ru/forum/index.php?",
-        "login" : "http://topdeck.ru/forum/index.php?app=core&module=global&section=login&do=process"
+        "login" : "http://topdeck.ru/forum/index.php?app=core&module=global&section=login&do=process",
+        "aucTemplate": "http://topdeck.ru/auc/auc.php?id=%1"
     },
     "keys" : {
         "login" : {

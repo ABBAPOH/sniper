@@ -9,7 +9,7 @@ class FastAucInfoLoader : public QObject
 public:
     using AucInfo = Utils::AucInfo;
 
-    explicit FastAucInfoLoader(QObject *parent = nullptr);
+    explicit FastAucInfoLoader(const std::shared_ptr<Config> &config, QObject *parent = nullptr);
     ~FastAucInfoLoader();
 
     std::shared_ptr<QNetworkAccessManager> networkAccessManager() const;
@@ -30,6 +30,7 @@ private slots:
     void onLoadFinished(bool ok);
 
 private:
+    Utils _utils;
     std::shared_ptr<QNetworkAccessManager> _manager;
     std::unique_ptr<QWebPage> _page;
     Status _status = Status::Idle;

@@ -6,8 +6,8 @@
 #include <QtCore/QTimer>
 
 BidsModel::BidsModel(const std::shared_ptr<Config>& config) :
-    _loader(new AucInfoLoader),
-    _fastLoader(new FastAucInfoLoader),
+    _loader(new AucInfoLoader(config)),
+    _fastLoader(new FastAucInfoLoader(config)),
     _updateDurationTimer(new QTimer)
 {
     _maxDuration = QTime::fromString(config->value("delays/max").toString(), "h:m:s");

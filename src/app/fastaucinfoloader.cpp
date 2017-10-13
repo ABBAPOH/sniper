@@ -7,8 +7,9 @@
 
 #include <QtCore/QUrlQuery>
 
-FastAucInfoLoader::FastAucInfoLoader(QObject *parent) :
+FastAucInfoLoader::FastAucInfoLoader(const std::shared_ptr<Config>& config, QObject *parent) :
     QObject(parent),
+    _utils(config),
     _page(new QWebPage)
 {
     connect(_page.get(), &QWebPage::loadFinished, this, &FastAucInfoLoader::onLoadFinished);
@@ -70,7 +71,7 @@ void FastAucInfoLoader::onLoadFinished(bool ok)
     }
 
     AucInfo info;
-    if (!Utils::parseAucInfo(frame, info)) {
+    if (!_utils.parseAucInfo(frame, info)) {
          qCWarning(fastAucInfoLoader) << "Failed to parse auc info";
          return processNextUrl();
     }

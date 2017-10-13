@@ -4,8 +4,9 @@
 #include <QtWebKit/QWebElement>
 #include <QtWebKitWidgets/QWebFrame>
 
-AucInfoLoader::AucInfoLoader(QObject *parent) :
+AucInfoLoader::AucInfoLoader(const std::shared_ptr<Config>& config, QObject *parent) :
     QObject(parent),
+    _utils(config),
     _page(new QWebPage)
 {
     auto onFrameLoadFinished = [this](QWebFrame *frame) {
@@ -80,7 +81,7 @@ void AucInfoLoader::onFrameLoadFinished(bool ok)
         const auto url = _page->mainFrame()->url();
 
         AucInfo info;
-        if (!Utils::parseAucInfo(frame, info)) {
+        if (!_utils.parseAucInfo(frame, info)) {
              qCWarning(aucInfoLoader) << "Failed to parse auc info";
              _status = Status::Idle;
              return processNextUrl();

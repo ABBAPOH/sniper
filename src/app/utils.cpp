@@ -4,29 +4,27 @@
 #include <QtWebKitWidgets/QWebFrame>
 #include <QtWebKit/QWebElement>
 #include <QtCore/QStandardPaths>
-#include <QtCore/QRegularExpression>
 #include <QtCore/QTime>
 #include <QtCore/QUrlQuery>
 
-namespace Utils {
-
-qint64 parseDuration(const QString& duration)
+Utils::Utils(const std::shared_ptr<Config>& config, QObject* parent) :
+    QObject(parent)
 {
-    QRegularExpression expr("((\\d+) д. ?)?((\\d+) ч. ?)?((\\d+) мин. ?)?((\\d+) с.)?$");
-
-    auto match = expr.match(duration);
-    if (match.isValid()) {
-        const qint64 days = match.captured(2).toInt();
-        const qint64 hours = match.captured(4).toInt();
-        const qint64 mins = match.captured(6).toInt();
-        const qint64 secs = match.captured(8).toInt();
-
-        return (((days * 24 + hours) * 60 + mins) * 60 + secs) * 1000;
+    const auto templates = config->value("templates").toMap();
+    const char * const requiredKeys[] = {"bid", "bids_count", "step", "duration", "ended"};
+    for (const auto &key: requiredKeys) {
+        const auto it = templates.find(key);
+        if (it == templates.end()) {
+            qCritical() << "Required key" << key << "not found in config";
+            return;
+        }
+        _configData.templates.insert({key, it.value().toString()});
     }
-    return -1;
+
+    _configData.timeExpression = QRegularExpression(config->value("timeExpression").toString());
 }
 
-QString durationToString(qint64 msecs)
+QString Utils::durationToString(qint64 msecs)
 {
     if (msecs < 0)
         return QString();
@@ -43,19 +41,39 @@ QString durationToString(qint64 msecs)
         return Application::tr("%1 m %2 s").arg(minutes).arg(secs + 1);
 }
 
-QString logPath()
+QString Utils::logPath()
 {
     return QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
             + "/sniper.log";
 }
 
-QString configPath()
+QString Utils::configPath()
 {
     return QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
             + "/config.json";
 }
 
-bool parseAucInfo(const QWebFrame* frame, AucInfo& info)
+QString Utils::getAucDuration(const QDateTime& current, const QDateTime& end)
+{
+    const auto msecs = current.msecsTo(end);
+    return durationToString(msecs);
+}
+
+qint64 Utils::parseDuration(const QString& duration) const
+{
+    auto match = _configData.timeExpression.match(duration);
+    if (match.isValid()) {
+        const qint64 days = match.captured(2).toInt();
+        const qint64 hours = match.captured(4).toInt();
+        const qint64 mins = match.captured(6).toInt();
+        const qint64 secs = match.captured(8).toInt();
+
+        return (((days * 24 + hours) * 60 + mins) * 60 + secs) * 1000;
+    }
+    return -1;
+}
+
+bool Utils::parseAucInfo(const QWebFrame* frame, AucInfo& info) const
 {
     info = AucInfo();
 
@@ -80,7 +98,7 @@ bool parseAucInfo(const QWebFrame* frame, AucInfo& info)
     {
         return text.toInt();
     };
-    const auto parseTime = [](const QString &text) -> QVariant
+    const auto parseTime = [this](const QString &text) -> QVariant
     {
         return parseDuration(text);
     };
@@ -88,14 +106,6 @@ bool parseAucInfo(const QWebFrame* frame, AucInfo& info)
     std::map<QString, Parser> parsers = {
         {"%int%", parseInt},
         {"%time%", parseTime}
-    };
-
-    std::map<QString, QString> templates = {
-        { "bid", "Текущая ставка, рубли: %int%" },
-        { "bids_count", "Всего ставок: %int%" },
-        { "step", "Шаг: %int%" },
-        { "duration", "До окончания аукциона: %time%" },
-        { "ended", "Завершен" },
     };
 
     const auto split = [](const QString &text) -> std::pair<QString, QString> {
@@ -110,7 +120,7 @@ bool parseAucInfo(const QWebFrame* frame, AucInfo& info)
     };
 
     std::map<QString, std::pair<QString, QString>> parsedTemplates;
-    for (const auto &item: templates) {
+    for (const auto &item: _configData.templates) {
         const auto key = item.first;
         const auto line = item.second;
         parsedTemplates.insert({key, split(line)});
@@ -163,12 +173,3 @@ bool parseAucInfo(const QWebFrame* frame, AucInfo& info)
 
     return true;
 }
-
-QString getAucDuration(const QDateTime& current, const QDateTime& end)
-{
-    const auto msecs = current.msecsTo(end);
-    return durationToString(msecs);
-}
-
-} // namespace Utils
-

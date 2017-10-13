@@ -8,8 +8,9 @@
 #include <QtWebKit/QWebElement>
 #include <QtWebKitWidgets/QWebFrame>
 
-AuctionsModel::AuctionsModel(QObject* parent) :
+AuctionsModel::AuctionsModel(const std::shared_ptr<Config>& config, QObject* parent) :
     QAbstractTableModel(parent),
+    _utils(config),
     _page(new QWebPage),
     _updateTimer(new QTimer),
     _updateDurationTimer(new QTimer)
@@ -185,7 +186,7 @@ void AuctionsModel::loadFinished()
         if (duration == "Завершен")
             continue;
 
-        auto msecs = Utils::parseDuration(duration);
+        auto msecs = _utils.parseDuration(duration);
 
         QDateTime dateTime = QDateTime::currentDateTimeUtc();
         dateTime = dateTime.addMSecs(msecs);

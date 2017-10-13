@@ -32,7 +32,7 @@ Application::Application(int& argc, char** argv, const std::shared_ptr<Config> &
     _nam(new QNetworkAccessManager()),
     _cookieJar(new CookieJar()),
     _loginManager(std::make_shared<LoginManager>(config)),
-    _auctionsModel(std::make_shared<AuctionsModel>()),
+    _auctionsModel(std::make_shared<AuctionsModel>(config)),
     _bidsModel(std::make_shared<BidsModel>(config)),
     _systemTray(new QSystemTrayIcon())
 {

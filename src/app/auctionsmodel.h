@@ -1,5 +1,8 @@
 #pragma once
 
+#include "config.h"
+#include "utils.h"
+
 #include <QtWebKitWidgets/QWebPage>
 
 #include <QtNetwork/QNetworkAccessManager>
@@ -39,7 +42,7 @@ public:
         int bid;
     };
 
-    explicit AuctionsModel(QObject *parent = nullptr);
+    explicit AuctionsModel(const std::shared_ptr<Config> &config, QObject *parent = nullptr);
 
     std::shared_ptr<QNetworkAccessManager> networkAccessManager() const;
     void setNetworkAccessManager(const std::shared_ptr<QNetworkAccessManager> &manager);
@@ -81,6 +84,7 @@ private:
     void initUpdateDurationTimer();
 
 private:
+    Utils _utils;
     std::deque<Data> _data;
     std::shared_ptr<QNetworkAccessManager> _manager;
     std::unique_ptr<QWebPage> _page;

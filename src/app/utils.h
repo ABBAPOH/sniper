@@ -45,3 +45,5 @@ private:
 
     ConfigData _configData;
 };
+
+Q_DECLARE_LOGGING_CATEGORY(utils);

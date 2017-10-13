@@ -76,7 +76,7 @@ bool Utils::parseAucInfo(const QWebFrame* frame, AucInfo& info) const
     const auto query = QUrlQuery(url);
 
     if (!query.hasQueryItem("id")) {
-        qWarning() << "Frame url" << url << "doesn't have id query item";
+        qCWarning(utils) << "Frame url" << url << "doesn't have id query item";
         return false;
     }
     info.aucId = query.queryItemValue("id").toInt();
@@ -84,7 +84,7 @@ bool Utils::parseAucInfo(const QWebFrame* frame, AucInfo& info) const
     auto body = frame->findFirstElement("body");
 
     if (body.isNull()) {
-        qWarning() << "Can't find <body> element in frame" << url;
+        qCWarning(utils) << "Can't find <body> element in frame" << url;
         return false;
     }
 
@@ -110,7 +110,7 @@ bool Utils::parseAucInfo(const QWebFrame* frame, AucInfo& info) const
         } else if (kv.size() == 1) {
             return {kv.at(0), QString()};
         }
-        qWarning() << "Line" << text << "has too many parts";
+        qCWarning(utils) << "Line" << text << "has too many parts";
         return {};
     };
 
@@ -143,12 +143,12 @@ bool Utils::parseAucInfo(const QWebFrame* frame, AucInfo& info) const
         if (key == "ended")
             continue;
         if (it == map1.end()) {
-            qWarning() << "Can't find line" << key;
+            qCWarning(utils) << "Can't find line" << key;
             return false;
         }
         const auto it2 = parsers.find(type);
         if (it2 == parsers.end()) {
-            qWarning() << "Can't find parser for" << type;
+            qCWarning(utils) << "Can't find parser for" << type;
             return false;
         }
         const auto &parser = it2->second;
@@ -162,9 +162,11 @@ bool Utils::parseAucInfo(const QWebFrame* frame, AucInfo& info) const
         info.step = parsedValues.at("step").toInt();
         info.duration = parsedValues.at("duration").toLongLong();
     } catch (const std::out_of_range &ex) {
-        qCritical() << "Can't find required key in" << plainBody;
+        qCCritical(utils) << "Can't find required key in" << plainBody;
         return false;
     }
 
     return true;
 }
+
+Q_LOGGING_CATEGORY(utils, "sniper.utils");

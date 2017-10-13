@@ -34,11 +34,11 @@ QString Utils::durationToString(qint64 msecs)
     const auto minutes = int((msecs / 1000 / 60) - (days * 24 + hours) * 60);
     const auto secs = int((msecs / 1000) - ((days * 24 + hours) * 60 + minutes) * 60);
     if (days > 0)
-        return Application::tr("%1 d %2 h").arg(days).arg(hours + 1);
+        return tr("%1 d %2 h").arg(days).arg(hours + 1);
     else if (hours > 0)
-        return Application::tr("%1 h %2 m").arg(hours).arg(minutes + 1);
+        return tr("%1 h %2 m").arg(hours).arg(minutes + 1);
     else
-        return Application::tr("%1 m %2 s").arg(minutes).arg(secs + 1);
+        return tr("%1 m %2 s").arg(minutes).arg(secs + 1);
 }
 
 QString Utils::logPath()

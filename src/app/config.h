@@ -13,14 +13,17 @@ public:
 
     inline const QVariantMap &data() const { return _data; }
 
-    inline QVariant value(const QString &key, const QVariant &defaultValue = QVariant())
+    inline QVariant value(const QString &key)
     {
         auto parts = key.split("/");
         auto data = _data;
         for (auto part : parts.mid(0, parts.length() - 1)) {
             data = data.value(part).toMap();
         }
-        return data.value(parts.last(), defaultValue);
+        const auto it = data.find(parts.last());
+        if (it == data.end())
+            qFatal("Key %s is not found in config", qPrintable(key));
+        return it.value();
     }
 
 private:

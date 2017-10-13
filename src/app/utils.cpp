@@ -10,15 +10,10 @@
 Utils::Utils(const std::shared_ptr<Config>& config, QObject* parent) :
     QObject(parent)
 {
-    const auto templates = config->value("templates").toMap();
     const char * const requiredKeys[] = {"bid", "bids_count", "step", "duration", "ended"};
     for (const auto &key: requiredKeys) {
-        const auto it = templates.find(key);
-        if (it == templates.end()) {
-            qCritical() << "Required key" << key << "not found in config";
-            return;
-        }
-        _configData.templates.insert({key, it.value().toString()});
+        _configData.templates.insert(
+            {key, config->value(QStringLiteral("templates/") + key).toString()});
     }
 
     _configData.timeExpression = QRegularExpression(config->value("timeExpression").toString());

@@ -48,6 +48,7 @@ private:
     void onLoginDialogAccepted();
     void showLoginDialog();
     void onLoginChecked(bool logined);
+    void onLoginError();
     void onTrayActivated();
 
 private:

@@ -28,6 +28,7 @@ public slots:
 
 signals:
     void loginChecked(bool logined);
+    void error();
 
 private:
     void pageLoaded(bool ok);

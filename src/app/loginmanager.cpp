@@ -44,6 +44,7 @@ QString LoginManager::lastUsedLogin() const
 
 void LoginManager::checkLogin()
 {
+    _page->mainFrame()->load(QUrl("about:blank"));
     _page->mainFrame()->load(QUrl(_config->value("urls/index.php").toString()));
 }
 
@@ -76,8 +77,12 @@ void LoginManager::pageLoaded(bool ok)
 {
     if (!ok) {
         qCWarning(loginManager) << "Can't load index.php";
+        emit error();
         return;
     }
+
+    if (_page->mainFrame()->url() == QUrl("about:blank"))
+        return;
 
     qCDebug(loginManager) << "Loaded" << _page->mainFrame()->url();
 

@@ -6,6 +6,7 @@
 #include <QtNetwork/QNetworkReply>
 
 #include <QtWidgets/QProgressDialog>
+#include <QtWidgets/QMessageBox>
 #include <QtWidgets/QSystemTrayIcon>
 
 #include <QtGui/QIcon>
@@ -77,6 +78,8 @@ int Application::exec()
 
     QObject::connect(_loginManager.get(), &LoginManager::loginChecked,
                      this, &Application::onLoginChecked);
+    QObject::connect(_loginManager.get(), &LoginManager::error,
+                     this, &Application::onLoginError);
 
     _loginManager->checkLogin();
     _systemTray->show();
@@ -179,6 +182,23 @@ void Application::onLoginChecked(bool logined)
         setQuitOnLastWindowClosed(false);
     } else {
         showLoginDialog();
+    }
+}
+
+void Application::onLoginError()
+{
+    _progressDialog->hide();
+    const auto result = QMessageBox::critical(nullptr,
+                                              tr("Error"),
+                                              tr("Can't login to topdeck"),
+                                              QMessageBox::StandardButton::Retry
+                                                | QMessageBox::StandardButton::Abort,
+                                              QMessageBox::StandardButton::Retry);
+    if (result == QMessageBox::StandardButton::Abort) {
+        quit();
+    } else {
+        _progressDialog->show();
+        _loginManager->checkLogin();
     }
 }
 

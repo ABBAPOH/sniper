@@ -165,6 +165,7 @@ void AuctionsModel::update()
 void AuctionsModel::loadFinished()
 {
     beginResetModel();
+    _data.clear();
     auto table = _page->mainFrame()->findFirstElement("table[class=reftable]");
     auto body = table.findFirst("tbody");
     for (auto tr = body.firstChild().nextSibling(); tr != body.lastChild(); tr = tr.nextSibling()) {

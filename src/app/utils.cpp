@@ -10,7 +10,7 @@
 Utils::Utils(const std::shared_ptr<Config>& config, QObject* parent) :
     QObject(parent)
 {
-    const char * const requiredKeys[] = {"bid", "bids_count", "step", "duration", "ended"};
+    const char * const requiredKeys[] = {"bid", "mybid1", "mybid2", "bids_count", "step", "duration", "ended"};
     for (const auto &key: requiredKeys) {
         _configData.templates.insert(
             {key, config->value(QStringLiteral("templates/") + key).toString()});
@@ -91,7 +91,12 @@ bool Utils::parseAucInfo(const QWebFrame* frame, AucInfo& info) const
     using Parser = std::function<QVariant(QString)>;
     const auto parseInt = [](const QString &text) -> QVariant
     {
-        return text.toInt();
+        bool ok = false;
+        const auto result = text.toInt(&ok);
+        if (!ok)
+            qCWarning(utils) << "Can't parse int value from" << text;
+        return result;
+
     };
     const auto parseTime = [this](const QString &text) -> QVariant
     {
@@ -124,7 +129,10 @@ bool Utils::parseAucInfo(const QWebFrame* frame, AucInfo& info) const
     const auto plainBody = body.toPlainText();
     std::map<QString, QString> map1;
     for (const auto &line: plainBody.split('\n', QString::SkipEmptyParts)) {
-        map1.insert(split(line));
+        for (auto subLine: line.split('(')) {
+            subLine.remove(')');
+            map1.insert(split(subLine));
+        }
     }
 
     const auto it = map1.find(parsedTemplates.at("ended").first);
@@ -144,7 +152,7 @@ bool Utils::parseAucInfo(const QWebFrame* frame, AucInfo& info) const
             continue;
         if (it == map1.end()) {
             qCWarning(utils) << "Can't find line" << key;
-            return false;
+            continue;
         }
         const auto it2 = parsers.find(type);
         if (it2 == parsers.end()) {

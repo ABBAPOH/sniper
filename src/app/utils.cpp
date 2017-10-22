@@ -116,7 +116,7 @@ bool Utils::parseAucInfo(const QWebFrame* frame, AucInfo& info) const
             return {kv.at(0), QString()};
         }
         qCWarning(utils) << "Line" << text << "has too many parts";
-        return {};
+        return {kv[0].trimmed(), kv.at(1).trimmed()};
     };
 
     std::map<QString, std::pair<QString, QString>> parsedTemplates;

@@ -3,6 +3,7 @@
 #include "bidsmodel.h"
 
 #include <QAbstractItemModel>
+#include <QtCore/QSortFilterProxyModel>
 #include <QMainWindow>
 
 namespace Ui {
@@ -23,9 +24,11 @@ public:
 private slots:
     void onDoubleClicked(const QModelIndex &idx);
     void onDoubleClicked2(const QModelIndex &idx);
+    void onAuctionsFilterChanged(const QString &text);
 
 private:
     Ui::MainWindow *ui;
     std::shared_ptr<AuctionsModel> _auctionsModel;
+    std::shared_ptr<QSortFilterProxyModel> _auctionsProxyModel;
     std::shared_ptr<BidsModel> _bidsModel;
 };

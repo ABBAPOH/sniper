@@ -36,6 +36,7 @@ void MainWindow::setAuctionsModel(std::shared_ptr<AuctionsModel> model)
 
     _auctionsModel = model;
     _auctionsProxyModel = std::make_shared<QSortFilterProxyModel>();
+    _auctionsProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     _auctionsProxyModel->setSourceModel(_auctionsModel.get());
     ui->auctionsView->setModel(_auctionsProxyModel.get());
     ui->auctionsView->header()->resizeSection(0, 250);

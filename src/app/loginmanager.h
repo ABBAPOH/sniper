@@ -38,6 +38,7 @@ private:
     std::shared_ptr<Config> _config;
     std::shared_ptr<QNetworkAccessManager> _manager;
     std::unique_ptr<QWebPage> _page;
+    QString _key;
 };
 
 Q_DECLARE_LOGGING_CATEGORY(loginManager);

@@ -39,7 +39,7 @@ Application::Application(int& argc, char** argv, const std::shared_ptr<Config> &
 {
     _instance = this;
 
-    _nam->setCookieJar(_cookieJar.get());
+//    _nam->setCookieJar(_cookieJar.get());
 
     _auctionsModel->setNetworkAccessManager(_nam);
     _bidsModel->infoLoader().setNetworkAccessManager(_nam);

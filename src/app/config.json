@@ -1,8 +1,8 @@
 {
     "urls" : {
         "makebid" : "http://topdeck.ru/auc/makebid.php",
-        "index.php" : "http://topdeck.ru/forum/index.php?",
-        "login" : "http://topdeck.ru/forum/index.php?app=core&module=global&section=login&do=process",
+        "index.php" : "https://topdeck.ru/",
+        "login" : "https://topdeck.ru/login/",
         "aucTemplate": "http://topdeck.ru/auc/auc.php?id=%1"
     },
     "keys" : {
@@ -12,9 +12,12 @@
             "logged_in": "logged_in",
             "not_logged_in": "not_logged_in",
             "referer" : "referer",
-            "username" : "username",
+            "loginSubmitted" : "login__standard_submitted",
+            "username" : "auth",
             "password" : "password",
-            "rememberMe" : "rememberMe"
+            "csrfKey" : "csrfKey",
+            "rememberMe" : "remember_me",
+            "rememberMeCheckbox" : "remember_me_checkbox"
         },
         "makebid" : {
             "auc_id" : "auc_id",

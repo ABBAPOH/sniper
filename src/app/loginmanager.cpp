@@ -61,9 +61,12 @@ void LoginManager::login(const QString &login, const QString &password)
     postData.addQueryItem(keys["referer"].toString(), urls["urls/index.php"].toString());
 //    postData.addQueryItem("username", "ஐWingS_OF_ButterFlyஐ");
 //    postData.addQueryItem("password", "f5a-tJF-qQZ-raR");
+    postData.addQueryItem(keys["loginSubmitted"].toString(), "1");
+    postData.addQueryItem(keys["csrfKey"].toString(), _key);
     postData.addQueryItem(keys["username"].toString(), login);
     postData.addQueryItem(keys["password"].toString(), password);
-    postData.addQueryItem(keys["rememberMe"].toString(), "1");
+    postData.addQueryItem(keys["rememberMe"].toString(), "0");
+    postData.addQueryItem(keys["rememberMeCheckbox"].toString(), "1");
 
     QNetworkRequest request(QUrl(urls["login"].toString()));
     request.setHeader(QNetworkRequest::ContentTypeHeader,
@@ -75,32 +78,33 @@ void LoginManager::login(const QString &login, const QString &password)
 
 void LoginManager::pageLoaded(bool ok)
 {
+    const auto url =_page->mainFrame()->url();
     if (!ok) {
-        qCWarning(loginManager) << "Can't load index.php";
+        qCWarning(loginManager) << "Can't load" << url;
         emit error();
         return;
     }
 
-    if (_page->mainFrame()->url() == QUrl("about:blank"))
+    if (url == QUrl("about:blank"))
         return;
 
-    qCDebug(loginManager) << "Loaded" << _page->mainFrame()->url();
-
-    const auto userNavigationId = _config->value("keys/login/#user_navigation").toString();
-    auto login = _page->mainFrame()->findFirstElement(userNavigationId);
-
-    const auto navigationClass = login.attribute(_config->value("keys/login/class").toString());
-    const auto loggedIn = _config->value("keys/login/logged_in").toString();
-    const auto notLoggedIn = _config->value("keys/login/not_logged_in").toString();
-
-    qCDebug(loginManager) << "User navigation class =" << navigationClass;
-
-    if (navigationClass == notLoggedIn)
+    const auto loginForm = _page->mainFrame()->findFirstElement("[data-role=loginForm]");
+    const auto userLink = _page->mainFrame()->findFirstElement("[id=elUserLink]");
+    if (!loginForm.isNull()) {
+        const auto key = _page->mainFrame()->findFirstElement(QString("[name=csrfKey]"));
+        if (key.isNull()) {
+            qWarning() << "Can't find csrfKey";
+            emit error();
+            return;
+        }
+        _key = key.attribute("value");
         emit loginChecked(false);
-    else if (navigationClass == loggedIn)
+    } else if (!userLink.isNull()) {
         emit loginChecked(true);
-    else
-        qCWarning(loginManager) << "Unknown user navigation class" << navigationClass;
+    } else {
+        qCWarning(loginManager) << "Can't determine if user logined";
+        emit error();
+    }
 }
 
 void LoginManager::onLoginFinished()

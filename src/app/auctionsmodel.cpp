@@ -194,12 +194,14 @@ void AuctionsModel::loadFinished()
         return;
     }
 
+    const auto aucTemplate = _config->value("urls/aucTemplate").toString();
     beginResetModel();
     _data.clear();
     for (auto &&value: doc.array()) {
         const auto &object = value.toObject();
         Data d;
         d.id = object.value("id").toString().toInt();
+        d.url = aucTemplate.arg(d.id);
         d.lot = object.value("lot").toString();
         d.bid = object.value("current_bid").toString().toInt();
         d.startBid = object.value("start_bid").toString().toInt();

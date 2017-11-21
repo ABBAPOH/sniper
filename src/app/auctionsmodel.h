@@ -1,7 +1,6 @@
 #pragma once
 
 #include "config.h"
-#include "utils.h"
 
 #include <QtWebKitWidgets/QWebPage>
 
@@ -89,7 +88,7 @@ private:
     void initUpdateDurationTimer();
 
 private:
-    Utils _utils;
+    const std::shared_ptr<Config> _config;
     std::deque<Data> _data;
     std::shared_ptr<QNetworkAccessManager> _manager;
     std::unique_ptr<QWebPage> _page;

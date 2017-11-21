@@ -14,7 +14,7 @@
 
 AuctionsModel::AuctionsModel(const std::shared_ptr<Config>& config, QObject* parent) :
     QAbstractTableModel(parent),
-    _utils(config),
+    _config(config),
     _page(new QWebPage),
     _updateTimer(new QTimer),
     _updateDurationTimer(new QTimer)
@@ -163,7 +163,7 @@ void AuctionsModel::update()
         return;
 
     qCInfo(auctionsModel) << "Requested update";
-    QNetworkRequest request(QUrl("https://topdeck.ru/apps/toptrade/api-v1/auctions"));
+    QNetworkRequest request(QUrl(_config->value("urls/auctions").toString()));
     const auto reply = _manager->get(request);
     connect(reply, &QNetworkReply::finished, this, &AuctionsModel::loadFinished);
 }

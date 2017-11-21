@@ -3,7 +3,8 @@
         "makebid" : "http://topdeck.ru/auc/makebid.php",
         "index.php" : "https://topdeck.ru/",
         "login" : "https://topdeck.ru/login/",
-        "aucTemplate": "http://topdeck.ru/auc/auc.php?id=%1"
+        "aucTemplate": "http://topdeck.ru/auc/auc.php?id=%1",
+        "auctions": "https://topdeck.ru/apps/toptrade/api-v1/auctions"
     },
     "keys" : {
         "login" : {

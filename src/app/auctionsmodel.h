@@ -33,13 +33,18 @@ public:
 
     struct Data
     {
+        int id {0};
         QUrl url;
         QString lot;
         QString seller;
         QString shipping;
+        QString shippingFull;
         qint64 duration;
+        QDateTime start;
         QDateTime end;
-        int bid;
+        int startBid {0};
+        int bid {0};
+        int bidCount {0};
     };
 
     explicit AuctionsModel(const std::shared_ptr<Config> &config, QObject *parent = nullptr);

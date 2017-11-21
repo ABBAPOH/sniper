@@ -2,6 +2,10 @@
 #include "utils.h"
 
 #include <QtCore/QDebug>
+#include <QtCore/QJsonDocument>
+#include <QtCore/QJsonArray>
+#include <QtCore/QJsonObject>
+#include <QtCore/QJsonValue>
 
 #include <QtNetwork/QNetworkReply>
 #include <QtNetwork/QNetworkRequest>
@@ -159,43 +163,59 @@ void AuctionsModel::update()
         return;
 
     qCInfo(auctionsModel) << "Requested update";
-    _page->mainFrame()->setUrl(QUrl("http://topdeck.ru/auc/aucs.php"));
+    QNetworkRequest request(QUrl("https://topdeck.ru/apps/toptrade/api-v1/auctions"));
+    const auto reply = _manager->get(request);
+    connect(reply, &QNetworkReply::finished, this, &AuctionsModel::loadFinished);
 }
 
 void AuctionsModel::loadFinished()
 {
+    const auto reply = qobject_cast<QNetworkReply*>(sender());
+    if (!reply) {
+        qCCritical(auctionsModel) << "no QNetworkReply";
+        return;
+    }
+
+    const auto json = reply->readAll();
+    if (json.isEmpty()) {
+        qCWarning(auctionsModel) << "Received empty json";
+        return;
+    }
+
+    QJsonParseError error;
+    const auto doc = QJsonDocument::fromJson(json, &error);
+    if (doc.isNull()) {
+        qCWarning(auctionsModel) << "Can't load json" << error.errorString();
+        return;
+    }
+
+    if (!doc.isArray()) {
+        qCWarning(auctionsModel) << "Loaded json is not an array";
+        return;
+    }
+
     beginResetModel();
     _data.clear();
-    auto table = _page->mainFrame()->findFirstElement("table[class=reftable]");
-    auto body = table.findFirst("tbody");
-    for (auto tr = body.firstChild().nextSibling(); tr != body.lastChild(); tr = tr.nextSibling()) {
-        QStringList rawData;
-        QUrl url;
-        for (auto td = tr.firstChild(); td != tr.lastChild(); td = td.nextSibling()) {
-            if (rawData.empty()) {
-                auto a = td.findFirst("a");
-                url = a.attribute("href");
-            }
-            rawData.append(td.toPlainText());
-        }
+    for (auto &&value: doc.array()) {
+        const auto &object = value.toObject();
         Data d;
-        d.url = url;
-        d.lot = rawData[0];
-        d.seller = rawData[1];
-        d.shipping = rawData[2];
-        const auto duration = rawData[3];
-        if (duration == "Завершен")
-            continue;
-
-        auto msecs = _utils.parseDuration(duration);
-
-        QDateTime dateTime = QDateTime::currentDateTimeUtc();
-        dateTime = dateTime.addMSecs(msecs);
-        d.end = dateTime;
-
-        d.bid = rawData[4].toInt();
+        d.id = object.value("id").toString().toInt();
+        d.lot = object.value("lot").toString();
+        d.bid = object.value("current_bid").toString().toInt();
+        d.startBid = object.value("start_bid").toString().toInt();
+        d.bidCount = object.value("bid_amount").toString().toInt();
+        d.seller = object.value("seller").toObject().value("name").toString();
+        d.shipping = object.value("shipping_info_quick").toString();
+        d.shippingFull = object.value("shipping_info").toString();
+        d.start = QDateTime::fromTime_t(object.value("date_published").toString().toUInt());
+        d.end = QDateTime::fromTime_t(object.value("date_estimated").toString().toUInt());
         _data.push_back(d);
     }
+
+    auto lessThan = [](const Data &lhs, const Data &rhs) {
+        return lhs.end < rhs.end;
+    };
+    std::sort(_data.begin(), _data.end(), lessThan);
     endResetModel();
     qCInfo(auctionsModel) << "Updated";
 }

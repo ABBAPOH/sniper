@@ -2,7 +2,6 @@
 
 #include "aucinfoloader.h"
 #include "auctionsmodel.h"
-#include "fastaucinfoloader.h"
 #include "config.h"
 
 #include <QtCore/QAbstractTableModel>
@@ -32,9 +31,6 @@ public:
     explicit BidsModel(const std::shared_ptr<Config> &config);
 
     AucInfoLoader &infoLoader() { return *_loader.get(); }
-    const AucInfoLoader &infoLoader() const { return *_loader.get(); }
-
-    FastAucInfoLoader &fastInfoLoader() { return *_fastLoader.get(); }
 
     void addBid(const AuctionsModel::Data &data, int bid);
     void update(const QModelIndex &index);
@@ -51,16 +47,16 @@ public:
 private:
     struct Data : public AuctionsModel::Data
     {
-        int aucId {0};
         int myBid {0};
         int step {0};
+        QString csrfName;
+        QString csrfValue;
         QDateTime nextUpdate;
         std::shared_ptr<QTimer> timer;
     };
 
 private slots:
-    void onInfoLoaded(const QUrl &url, const AucInfoLoader::AucInfo &info);
-    void onFastInfoLoaded(int aucId, const Utils::AucInfo &info);
+    void onFastInfoLoaded(int aucId, const AucInfoLoader::AucInfo &info);
     void updateInfo(const std::vector<Data>::iterator &it, const AucInfoLoader::AucInfo &info);
     void onTimeout();
     void processDuration(Data &data);
@@ -78,7 +74,6 @@ private:
     double _dispersion;
     std::vector<Data> _data;
     std::unique_ptr<AucInfoLoader> _loader;
-    std::unique_ptr<FastAucInfoLoader> _fastLoader;
     std::unique_ptr<QTimer> _updateDurationTimer;
 };
 

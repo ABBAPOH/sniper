@@ -1,15 +1,9 @@
 #pragma once
 
-#include "config.h"
 #include "utils.h"
 
-#include <QtWebKitWidgets/QWebPage>
-
 #include <QtNetwork/QNetworkAccessManager>
-
-#include <QtCore/QObject>
-#include <QtCore/QLoggingCategory>
-#include <QtCore/QUrl>
+#include <QtWebKitWidgets/QWebView>
 
 #include <deque>
 #include <memory>
@@ -18,7 +12,13 @@ class AucInfoLoader : public QObject
 {
     Q_OBJECT
 public:
-    using AucInfo = Utils::AucInfo;
+    struct AucInfo
+    {
+        int id {0};
+        int bid {0};
+        QString csrfName;
+        QString csrfValue;
+    };
 
     explicit AucInfoLoader(const std::shared_ptr<Config> &config, QObject *parent = nullptr);
     ~AucInfoLoader();
@@ -27,10 +27,10 @@ public:
     void setNetworkAccessManager(const std::shared_ptr<QNetworkAccessManager> &manager);
 
 public slots:
-    void load(const QUrl &url);
+    void load(int auc_id);
 
 signals:
-    void loaded(const QUrl &url, const AucInfo &info);
+    void loaded(int auc_id, const AucInfo &info);
 
 private:
     enum class Status { Idle, Adding };
@@ -38,14 +38,15 @@ private:
     void processNextUrl();
 
 private slots:
-    void onFrameLoadFinished(bool ok);
+    void onLoadFinished(bool ok);
 
 private:
-    Utils _utils;
+    QString _urlTemplate;
     std::shared_ptr<QNetworkAccessManager> _manager;
     std::unique_ptr<QWebPage> _page;
     Status _status = Status::Idle;
     std::deque<QUrl> _queue;
 };
 
-Q_DECLARE_LOGGING_CATEGORY(aucInfoLoader);
+
+Q_DECLARE_LOGGING_CATEGORY(fastAucInfoLoader);

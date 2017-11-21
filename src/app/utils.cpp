@@ -1,8 +1,6 @@
 #include "utils.h"
 #include "application.h"
 
-#include <QtWebKitWidgets/QWebFrame>
-#include <QtWebKit/QWebElement>
 #include <QtCore/QStandardPaths>
 #include <QtCore/QTime>
 #include <QtCore/QUrlQuery>
@@ -66,115 +64,6 @@ qint64 Utils::parseDuration(const QString& duration) const
         return (((days * 24 + hours) * 60 + mins) * 60 + secs) * 1000;
     }
     return -1;
-}
-
-bool Utils::parseAucInfo(const QWebFrame* frame, AucInfo& info) const
-{
-    info = AucInfo();
-
-    const auto url = frame->baseUrl();
-    const auto query = QUrlQuery(url);
-
-    if (!query.hasQueryItem("id")) {
-        qCWarning(utils) << "Frame url" << url << "doesn't have id query item";
-        return false;
-    }
-    info.aucId = query.queryItemValue("id").toInt();
-
-    auto body = frame->findFirstElement("body");
-
-    if (body.isNull()) {
-        qCWarning(utils) << "Can't find <body> element in frame" << url;
-        return false;
-    }
-
-    using Parser = std::function<QVariant(QString)>;
-    const auto parseInt = [](const QString &text) -> QVariant
-    {
-        bool ok = false;
-        const auto result = text.toInt(&ok);
-        if (!ok)
-            qCWarning(utils) << "Can't parse int value from" << text;
-        return result;
-
-    };
-    const auto parseTime = [this](const QString &text) -> QVariant
-    {
-        return parseDuration(text);
-    };
-
-    std::map<QString, Parser> parsers = {
-        {"%int%", parseInt},
-        {"%time%", parseTime}
-    };
-
-    const auto split = [](const QString &text) -> std::pair<QString, QString> {
-        const auto kv = text.split(':');
-        if (kv.size() == 2) {
-            return {kv[0].trimmed(), kv.at(1).trimmed()};
-        } else if (kv.size() == 1) {
-            return {kv.at(0), QString()};
-        }
-        qCWarning(utils) << "Line" << text << "has too many parts";
-        return {kv[0].trimmed(), kv.at(1).trimmed()};
-    };
-
-    std::map<QString, std::pair<QString, QString>> parsedTemplates;
-    for (const auto &item: _configData.templates) {
-        const auto key = item.first;
-        const auto line = item.second;
-        parsedTemplates.insert({key, split(line)});
-    }
-
-    const auto plainBody = body.toPlainText();
-    std::map<QString, QString> map1;
-    for (const auto &line: plainBody.split('\n', QString::SkipEmptyParts)) {
-        for (auto subLine: line.split('(')) {
-            subLine.remove(')');
-            map1.insert(split(subLine));
-        }
-    }
-
-    const auto it = map1.find(parsedTemplates.at("ended").first);
-    if (it != map1.end()) {
-        info.ended = true;
-        return true;
-    }
-
-    std::map<QString, QVariant> parsedValues;
-
-    for (const auto &item: parsedTemplates) {
-        const auto &key = item.first;
-        const auto &value = item.second.first;
-        const auto &type = item.second.second;
-        const auto it = map1.find(value);
-        if (key == "ended")
-            continue;
-        if (it == map1.end()) {
-            qCWarning(utils) << "Can't find line" << key;
-            continue;
-        }
-        const auto it2 = parsers.find(type);
-        if (it2 == parsers.end()) {
-            qCWarning(utils) << "Can't find parser for" << type;
-            return false;
-        }
-        const auto &parser = it2->second;
-        const auto realValue = parser(it->second);
-        parsedValues.insert({key, realValue});
-    }
-
-    try {
-        info.ended = false;
-        info.bid = parsedValues.at("bid").toInt();
-        info.step = parsedValues.at("step").toInt();
-        info.duration = parsedValues.at("duration").toLongLong();
-    } catch (const std::out_of_range &ex) {
-        qCCritical(utils) << "Can't find required key in" << plainBody;
-        return false;
-    }
-
-    return true;
 }
 
 Q_LOGGING_CATEGORY(utils, "sniper.utils");

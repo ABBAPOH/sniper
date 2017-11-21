@@ -7,7 +7,6 @@
 
 BidsModel::BidsModel(const std::shared_ptr<Config>& config) :
     _loader(new AucInfoLoader(config)),
-    _fastLoader(new FastAucInfoLoader(config)),
     _updateDurationTimer(new QTimer)
 {
     _maxDuration = QTime::fromString(config->value("delays/max").toString(), "h:m:s");
@@ -15,8 +14,7 @@ BidsModel::BidsModel(const std::shared_ptr<Config>& config) :
     _expectedValue = config->value("delays/expected").toDouble();
     _dispersion = config->value("delays/dispersion").toDouble();
 
-    connect(_loader.get(), &AucInfoLoader::loaded, this, &BidsModel::onInfoLoaded);
-    connect(_fastLoader.get(), &FastAucInfoLoader::loaded, this, &BidsModel::onFastInfoLoaded);
+    connect(_loader.get(), &AucInfoLoader::loaded, this, &BidsModel::onFastInfoLoaded);
 
     initUpdateDurationTimer();
 }
@@ -36,7 +34,7 @@ void BidsModel::addBid(const AuctionsModel::Data &data, int bid)
     d.timer->setProperty("id", d.url);
     connect(d.timer.get(), &QTimer::timeout, this, &BidsModel::onTimeout);
 
-    _loader->load(d.url);
+    _loader->load(d.id);
 
     beginInsertRows(QModelIndex(), newRow, newRow);
     _data.push_back(d);
@@ -49,7 +47,7 @@ void BidsModel::update(const QModelIndex &index)
         return;
 
     const auto data = _data.at(size_t(index.row()));
-    _loader->load(data.url);
+    _loader->load(data.id);
 }
 
 int BidsModel::rowCount(const QModelIndex &parent) const
@@ -87,7 +85,7 @@ QVariant BidsModel::data(const QModelIndex &index, int role) const
         } else if (column == MyBid) {
             return data.myBid;
         } else if (column == AucId) {
-            return data.aucId;
+            return data.id;
         } else if (column == NextUpdate) {
             return data.nextUpdate.toLocalTime();
         }
@@ -126,27 +124,22 @@ void BidsModel::makeBid(const QModelIndex& index)
     makeBid(_data.at(size_t(index.row())));
 }
 
-void BidsModel::onInfoLoaded(const QUrl& url, const AucInfoLoader::AucInfo &info)
-{
-    updateInfo(findAuc(url), info);
-}
-
-void BidsModel::onFastInfoLoaded(int aucId, const Utils::AucInfo& info)
+void BidsModel::onFastInfoLoaded(int aucId, const AucInfoLoader::AucInfo& info)
 {
     const auto predicate = [&aucId](const Data &d)
     {
-        return aucId == d.aucId;
+        return aucId == d.id;
     };
     const auto it = std::find_if(_data.begin(), _data.end(), predicate);
     if (it == _data.end()) {
-        qCCritical(bidsModel) << "Can't find auc with auc_id" << info.aucId;
+        qCCritical(bidsModel) << "Can't find auc with auc_id" << info.id;
         return;
     }
 
     updateInfo(it, info);
 }
 
-void BidsModel::updateInfo(const std::vector<Data>::iterator& it, const Utils::AucInfo &info)
+void BidsModel::updateInfo(const std::vector<Data>::iterator& it, const AucInfoLoader::AucInfo &info)
 {
     if (it == _data.end()) {
         qCCritical(bidsModel) << "updateInfo called with invalid iterator";
@@ -160,7 +153,7 @@ void BidsModel::updateInfo(const std::vector<Data>::iterator& it, const Utils::A
 
     qCDebug(bidsModel) << "Update data for auc" << data.lot;
 
-    if (info.ended) {
+    if (data.end > QDateTime::currentDateTime()) {
         qCDebug(bidsModel) << "rowCount before = " << rowCount();
         beginRemoveRows(QModelIndex(), row, row);
         _data.erase(it);
@@ -169,11 +162,9 @@ void BidsModel::updateInfo(const std::vector<Data>::iterator& it, const Utils::A
         return;
     }
 
-    data.aucId = info.aucId;
     data.bid = info.bid;
-    data.step = info.step;
-    data.duration = info.duration;
-    data.end = QDateTime::currentDateTime().addMSecs(data.duration);
+    data.csrfName = info.csrfName;
+    data.csrfValue = info.csrfValue;
 
     qCDebug(bidsModel) << "Current bid = " << data.bid;
     if (data.duration < 60 * 60 * 1000)
@@ -198,7 +189,7 @@ void BidsModel::onTimeout()
         const auto &data = *it;
 
         qCInfo(bidsModel) << "Timeout for auc" << data.lot;
-        _fastLoader->load(data.aucId);
+        _loader->load(data.id);
     }
 }
 
@@ -233,8 +224,8 @@ void BidsModel::makeBid(const BidsModel::Data &data)
         qCInfo(bidsModel) << "Current bid is higher than you bid, skipping auc"
                           << data.lot;
     } else {
-        qCInfo(bidsModel) << "Making bid" << myBid << "for" << data.lot << tr("( id = %1)").arg(data.aucId);
-        Application::instance()->makeBid(data.aucId, myBid);
+        qCInfo(bidsModel) << "Making bid" << myBid << "for" << data.lot << tr("( id = %1)").arg(data.id);
+        Application::instance()->makeBid(data.id, myBid, data.csrfName, data.csrfValue);
     }
 }
 

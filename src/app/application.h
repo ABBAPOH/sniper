@@ -32,7 +32,7 @@ public:
     int exec();
 
 public slots:
-    void makeBid(int auctionId, int bid);
+    void makeBid(int auctionId, int bid, const QString& csrfName, const QString& csrfValue);
 
 protected:
     bool event(QEvent *e);

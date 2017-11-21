@@ -43,7 +43,6 @@ Application::Application(int& argc, char** argv, const std::shared_ptr<Config> &
 
     _auctionsModel->setNetworkAccessManager(_nam);
     _bidsModel->infoLoader().setNetworkAccessManager(_nam);
-    _bidsModel->fastInfoLoader().setNetworkAccessManager(_nam);
     _loginManager->setNetworkAccessManager(_nam);
 
     _systemTray->setIcon(QIcon(":/sniper.png"));
@@ -87,18 +86,22 @@ int Application::exec()
     return QApplication::exec();
 }
 
-void Application::makeBid(int auctionId, int bid)
+void Application::makeBid(int auctionId, int bid, const QString &csrfName, const QString &csrfValue)
 {
     const auto urls = _config->data()["urls"].toMap();
     const auto keys = _config->data()["keys"].toMap().value("makebid").toMap();
+    const auto url = QUrl(urls["makebid"].toString().arg(auctionId));
 
     QUrlQuery postData;
-    postData.addQueryItem(keys["auc_id"].toString(), QString::number(auctionId));
     postData.addQueryItem(keys["bid"].toString(), QString::number(bid));
+    postData.addQueryItem(keys["csrfName"].toString(), csrfName);
+    postData.addQueryItem(keys["csrfValue"].toString(), csrfValue);
 
-    QNetworkRequest request(QUrl(urls["makebid"].toString()));
+    QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader,
         "application/x-www-form-urlencoded");
+
+    qInfo() << "makeBid" << postData.toString();
 
     if (!_options.dryRun) {
         const auto data = postData.toString(QUrl::FullyEncoded).toUtf8();

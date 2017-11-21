@@ -1,6 +1,6 @@
 {
     "urls" : {
-        "makebid" : "http://topdeck.ru/auc/makebid.php",
+        "makebid" : "https://topdeck.ru/apps/toptrade/auctions/%1/bid",
         "index.php" : "https://topdeck.ru/",
         "login" : "https://topdeck.ru/login/",
         "aucTemplate": "https://topdeck.ru/apps/toptrade/auctions/%1",
@@ -22,7 +22,9 @@
         },
         "makebid" : {
             "auc_id" : "auc_id",
-            "bid" : "bid"
+            "bid" : "bid",
+            "csrfName" : "csrf_name",
+            "csrfValue": "csrf_value"
         }
     },
     "delays" : {
